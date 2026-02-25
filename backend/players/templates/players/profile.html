@@ -1,0 +1,7 @@
+<h2>My Profile</h2>
+<p>Name: {{ player.first_name }} {{ player.last_name }}</p>
+<p>DOB: {{ player.date_of_birth }}</p>
+<p>Email: {{ player.email }}</p>
+<p>Position: {{ player.position }}</p>
+
+<a href="{% url 'edit_profile' %}">Edit Profile</a>
