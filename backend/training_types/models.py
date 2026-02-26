@@ -60,7 +60,7 @@ class CompletedSession(models.Model):
         "TrainingType", on_delete=models.CASCADE, related_name="training_sessions"
     )
 
-    session_date = models.DateField(blank=True)
+    session_date = models.DateField(null=True, blank=True)
     session_time = models.TimeField()
 
     notes = models.TextField(blank=True)

@@ -7,11 +7,13 @@ from .forms import PlayerRegistrationForm, PlayerEditForm
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 
 class PlayerViewSet(viewsets.ModelViewSet):
     queryset = Player.objects.all()
     serializer_class = PlayerSerializer
+    permission_classes = [AllowAny]
 
 
 @login_required

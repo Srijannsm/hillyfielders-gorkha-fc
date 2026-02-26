@@ -13,3 +13,4 @@ class SessionBookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = SessionBooking
         fields = "__all__"
+        read_only_fields = ["player", "status", "created_at", "updated_at"]

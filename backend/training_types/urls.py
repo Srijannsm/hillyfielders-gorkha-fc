@@ -6,7 +6,7 @@ from .views import (
 )
 
 urlpatterns = [
-    path('training_types/', TrainingTypeListView.as_view()),
-    path('book_session/', SessionBookingCreateView.as_view()),
-    path('bookings/player/<int:player_id>/', PlayerBookingListView.as_view()),
+    path("training-types/", TrainingTypeListView.as_view(), name="training_type_list"),
+    path("book-session/", SessionBookingCreateView.as_view(), name="book_session"),
+    path("player-bookings/", PlayerBookingListView.as_view(), name="player_bookings"),
 ]
