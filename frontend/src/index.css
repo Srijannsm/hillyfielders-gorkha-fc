@@ -1,1 +1,107 @@
 @import "tailwindcss";
+
+@theme {
+  /* ── GFC colour palette (matched to logo) ─────────── */
+  --color-gfc-900: #152b17;   /* darkest — page backgrounds    */
+  --color-gfc-800: #1d3d20;   /* dark    — navbar, hero bg     */
+  --color-gfc-700: #2c5c30;   /* mid     — cards, borders      */
+  --color-gfc-500: #3d7a40;   /* medium  — logo main shield    */
+  --color-gfc-lime: #beff00;  /* accent  — logo yellow-green   */
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #fff;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: 0.01em;
+}
+
+/* ── Hero ─────────────────────────────────────────── */
+.hero-bg {
+  background-image:
+    linear-gradient(
+      to top,
+      rgba(21, 43, 23, 0.97) 0%,
+      rgba(29, 61, 32, 0.78) 45%,
+      rgba(29, 61, 32, 0.38) 100%
+    ),
+    url('/omar-ramadan-eEhOyEtBGMQ-unsplash.jpg');
+  background-size: cover;
+  background-position: center 60%;
+}
+
+/* ── Inner page headers ───────────────────────────── */
+.section-bg {
+  background-image:
+    linear-gradient(rgba(21, 43, 23, 0.95), rgba(21, 43, 23, 0.95)),
+    url('https://images.unsplash.com/photo-1459865264687-595d652de67e?w=1200&q=60');
+  background-size: cover;
+  background-position: center;
+}
+
+/* ── Section eyebrow label ────────────────────────── */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #BEFF00;
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 2px;
+  background: #BEFF00;
+  flex-shrink: 0;
+}
+
+/* ── Card hover ───────────────────────────────────── */
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.14);
+}
+
+/* ── Nav dropdown ─────────────────────────────────── */
+.nav-dropdown {
+  display: none;
+}
+.nav-item:hover .nav-dropdown {
+  display: block;
+}
+
+/* ── Eyebrow on light/white backgrounds ───────────── */
+.eyebrow-light {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #2c5c30;
+}
+.eyebrow-light::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 2px;
+  background: #2c5c30;
+  flex-shrink: 0;
+}

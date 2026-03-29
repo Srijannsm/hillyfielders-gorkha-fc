@@ -2,11 +2,17 @@ from django.db import models
 
 class Team(models.Model):
     TEAM_CHOICES = [
-        ('mens', "Men's First Team"),
-        ('womens', "Women's First Team"),
+        ('mens-senior',   "Men's Senior Team"),
+        ('mens-u16',      "Men's U-16"),
+        ('mens-u14',      "Men's U-14"),
+        ('mens-u12',      "Men's U-12"),
+        ('womens-senior', "Women's Senior Team"),
+        ('womens-u16',    "Women's U-16"),
+        ('womens-u14',    "Women's U-14"),
+        ('womens-u12',    "Women's U-12"),
     ]
     name = models.CharField(max_length=100)
-    team_type = models.CharField(max_length=10, choices=TEAM_CHOICES)
+    team_type = models.CharField(max_length=20, choices=TEAM_CHOICES)
     description = models.TextField(blank=True)
 
     def __str__(self):

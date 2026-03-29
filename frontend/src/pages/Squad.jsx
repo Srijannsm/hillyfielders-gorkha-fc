@@ -1,82 +1,113 @@
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import { getTeams } from '../services/api'
+import TeamPageTabs from '../components/TeamPageTabs'
 
+const TEAM_LABELS = {
+  'mens-senior':   { name: "Men's Senior Team",   programme: "Men's Programme" },
+  'mens-u16':      { name: "Men's U-16",          programme: "Men's Programme" },
+  'mens-u14':      { name: "Men's U-14",          programme: "Men's Programme" },
+  'mens-u12':      { name: "Men's U-12",          programme: "Men's Programme" },
+  'womens-senior': { name: "Women's Senior Team", programme: "Women's Programme" },
+  'womens-u16':    { name: "Women's U-16",        programme: "Women's Programme" },
+  'womens-u14':    { name: "Women's U-14",        programme: "Women's Programme" },
+  'womens-u12':    { name: "Women's U-12",        programme: "Women's Programme" },
+  'mens':          { name: "Men's First Team",    programme: "Men's Programme" },
+  'womens':        { name: "Women's First Team",  programme: "Women's Programme" },
+}
+
+const POSITION_ORDER  = ['GK', 'DEF', 'MID', 'FWD']
+const POSITION_LABELS = { GK: 'Goalkeepers', DEF: 'Defenders', MID: 'Midfielders', FWD: 'Forwards' }
+
+/* ── Player card ───────────────────────────────────────── */
 function PlayerCard({ player }) {
   return (
-    <div className="bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition-shadow group">
+    <div className="group bg-gfc-900 overflow-hidden border border-gfc-700 hover:border-gfc-lime transition-colors">
       {/* Photo */}
-      <div className="bg-[#1B4332] h-56 flex items-center justify-center overflow-hidden">
+      <div className="aspect-[3/4] relative overflow-hidden bg-gfc-700">
         {player.photo ? (
           <img
             src={player.photo}
             alt={player.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-[#BEFF00] text-5xl font-black">
+          <div className="w-full h-full flex items-center justify-center">
+            <span
+              className="font-black text-gfc-lime/10 select-none"
+              style={{ fontSize: '96px', lineHeight: 1 }}
+            >
               {player.jersey_number}
             </span>
-            <span className="text-white text-sm opacity-60">No photo</span>
           </div>
         )}
+        {/* Bottom gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-gfc-900 via-transparent to-transparent" />
+        {/* Jersey badge */}
+        <div className="absolute top-0 left-0 bg-gfc-lime text-gfc-900 font-black text-xs w-9 h-9 flex items-center justify-center">
+          {player.jersey_number}
+        </div>
       </div>
 
       {/* Info */}
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="font-bold text-gray-800 text-lg leading-tight">
-              {player.name}
-            </p>
-            <p className="text-[#1B4332] text-sm font-semibold mt-1">
-              {player.position_display}
-            </p>
-          </div>
-          <span className="text-3xl font-black text-gray-200">
-            {player.jersey_number}
-          </span>
-        </div>
+      <div className="px-4 pt-3 pb-4 border-t border-gfc-700">
+        <p className="text-gfc-lime text-[10px] font-black uppercase tracking-widest mb-1">
+          {player.position_display}
+        </p>
+        <h3 className="text-white font-black uppercase text-base leading-tight">
+          {player.name}
+        </h3>
         {player.nationality && (
-          <p className="text-gray-400 text-xs mt-2">{player.nationality}</p>
+          <p className="text-gray-500 text-xs mt-1 font-medium">{player.nationality}</p>
         )}
       </div>
     </div>
   )
 }
 
+/* ── Staff card ────────────────────────────────────────── */
 function StaffCard({ member }) {
   return (
-    <div className="bg-white rounded-xl overflow-hidden shadow flex items-center gap-4 p-4">
-      <div className="bg-[#1B4332] w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+    <div className="bg-white border border-gray-100 flex items-center gap-4 p-5 hover:border-gfc-700 transition-colors">
+      <div className="bg-gfc-900 w-14 h-14 flex items-center justify-center flex-shrink-0 overflow-hidden">
         {member.photo ? (
           <img src={member.photo} alt={member.name} className="w-full h-full object-cover" />
         ) : (
-          <span className="text-[#BEFF00] text-xl font-black">
+          <span className="text-gfc-lime text-xl font-black">
             {member.name.charAt(0)}
           </span>
         )}
       </div>
       <div>
-        <p className="font-bold text-gray-800">{member.name}</p>
-        <p className="text-[#1B4332] text-sm font-semibold">{member.role_display}</p>
+        <p className="text-gray-900 font-black uppercase text-sm">{member.name}</p>
+        <p className="text-gfc-700 text-xs font-bold uppercase tracking-wider mt-0.5">
+          {member.role_display}
+        </p>
       </div>
     </div>
   )
 }
 
-const POSITION_ORDER = ['GK', 'DEF', 'MID', 'FWD']
-const POSITION_LABELS = {
-  GK: 'Goalkeepers',
-  DEF: 'Defenders',
-  MID: 'Midfielders',
-  FWD: 'Forwards',
+/* ── Section divider ───────────────────────────────────── */
+function PositionSection({ label, count, children }) {
+  return (
+    <div className="mb-16">
+      <div className="flex items-center gap-5 mb-8">
+        <h2 className="text-gray-900 font-black uppercase text-2xl">{label}</h2>
+        <span className="bg-gfc-lime text-gfc-900 font-black text-xs px-3 py-1 uppercase tracking-wide">
+          {count}
+        </span>
+        <div className="flex-1 h-px bg-gray-200" />
+      </div>
+      {children}
+    </div>
+  )
 }
 
+/* ══════════════════════════════════════════════════════════ */
 export default function Squad() {
   const { teamType } = useParams()
-  const isMens = teamType === 'mens'
+  const teamInfo = TEAM_LABELS[teamType] ?? { name: 'Squad', programme: 'The Club' }
 
   const { data: teams, isLoading, isError } = useQuery({
     queryKey: ['teams'],
@@ -84,89 +115,104 @@ export default function Squad() {
   })
 
   if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-[#1B4332] font-bold text-xl animate-pulse">
-        Loading squad...
+    <div className="min-h-screen bg-gfc-900 flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-gfc-lime font-black text-3xl animate-pulse mb-2">GFC</div>
+        <p className="text-gray-500 text-sm uppercase tracking-widest">Loading squad...</p>
       </div>
     </div>
   )
 
   if (isError) return (
     <div className="min-h-screen flex items-center justify-center">
-      <p className="text-red-500">Failed to load squad. Is Django running?</p>
+      <p className="text-red-400 font-semibold">Failed to load squad. Is Django running?</p>
     </div>
   )
 
   const team = teams?.find(t => t.team_type === teamType)
 
   if (!team) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-gray-500">
-        No {isMens ? "men's" : "women's"} team found. Add one in the admin.
-      </p>
+    <div>
+      <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
+        <div className="max-w-7xl mx-auto">
+          <p className="eyebrow mb-5">{teamInfo.programme}</p>
+          <h1 className="font-black uppercase" style={{ fontSize: 'clamp(48px, 8vw, 88px)', lineHeight: 1 }}>
+            {teamInfo.name}
+          </h1>
+        </div>
+      </section>
+      <TeamPageTabs teamType={teamType} />
+      <div className="bg-white min-h-[40vh] flex items-center justify-center px-6">
+        <div className="text-center py-24">
+          <div className="w-16 h-16 border-2 border-gray-200 flex items-center justify-center mx-auto mb-6">
+            <span className="text-gfc-700 font-black text-xl">GFC</span>
+          </div>
+          <p className="text-gray-900 font-black uppercase text-xl mb-2">Squad Coming Soon</p>
+          <p className="text-gray-400 text-sm">This team is being assembled. Check back soon.</p>
+        </div>
+      </div>
     </div>
   )
 
-  // Group players by position
   const grouped = POSITION_ORDER.reduce((acc, pos) => {
-    const inPosition = team.players.filter(p => p.position === pos)
-    if (inPosition.length) acc[pos] = inPosition
+    const inPos = team.players.filter(p => p.position === pos)
+    if (inPos.length) acc[pos] = inPos
     return acc
   }, {})
 
   return (
     <div>
-      {/* Header */}
-      <section className="bg-[#1B4332] text-white py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <p className="text-[#BEFF00] text-sm font-semibold uppercase tracking-widest mb-2">
-            {isMens ? "Men's First Team" : "Women's First Team"}
-          </p>
-          <h1 className="text-5xl font-black mb-2">The Squad</h1>
-          <p className="text-gray-300">
-            {team.players.length} players · Season 2025/26
+      {/* Header (dark) */}
+      <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <p className="eyebrow mb-5">{teamInfo.programme}</p>
+            <h1 className="font-black uppercase leading-none" style={{ fontSize: 'clamp(48px, 8vw, 88px)' }}>
+              {teamInfo.name}
+            </h1>
+          </div>
+          <p className="text-gray-500 text-sm font-medium uppercase tracking-widest pb-1">
+            {team.players.length} Players · Season 2025/26
           </p>
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <TeamPageTabs teamType={teamType} />
 
-        {/* Staff section */}
-        {team.staff.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-[#1B4332] font-black text-2xl mb-6">
-              Coaching Staff
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {team.staff.map(s => <StaffCard key={s.id} member={s} />)}
-            </div>
-          </div>
-        )}
+      {/* Content (white) */}
+      <div className="bg-white">
+        <div className="max-w-7xl mx-auto px-6 py-16">
 
-        {/* Players grouped by position */}
-        {Object.entries(grouped).map(([pos, players]) => (
-          <div key={pos} className="mb-12">
-            <div className="flex items-center gap-4 mb-6">
-              <h2 className="text-[#1B4332] font-black text-2xl">
-                {POSITION_LABELS[pos]}
-              </h2>
-              <span className="bg-[#BEFF00] text-[#1B4332] text-xs font-bold px-2 py-1 rounded-full">
-                {players.length}
-              </span>
+          {/* Staff */}
+          {team.staff.length > 0 && (
+            <div className="mb-16">
+              <div className="flex items-center gap-5 mb-8">
+                <h2 className="text-gray-900 font-black uppercase text-2xl">Coaching Staff</h2>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {team.staff.map(s => <StaffCard key={s.id} member={s} />)}
+              </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {players.map(p => <PlayerCard key={p.id} player={p} />)}
-            </div>
-          </div>
-        ))}
+          )}
 
-        {team.players.length === 0 && (
-          <div className="text-center py-20 text-gray-400">
-            <p className="text-5xl mb-4">⚽</p>
-            <p className="font-semibold">No players added yet.</p>
-            <p className="text-sm mt-1">Add players in the Django admin.</p>
-          </div>
-        )}
+          {/* Players by position */}
+          {Object.entries(grouped).map(([pos, players]) => (
+            <PositionSection key={pos} label={POSITION_LABELS[pos]} count={players.length}>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                {players.map(p => <PlayerCard key={p.id} player={p} />)}
+              </div>
+            </PositionSection>
+          ))}
+
+          {team.players.length === 0 && (
+            <div className="text-center py-24 border border-gray-100 bg-gray-50">
+              <p className="text-gfc-700/20 font-black text-5xl mb-4" style={{ fontFamily: 'Oswald, sans-serif' }}>GFC</p>
+              <p className="text-gray-900 font-black uppercase text-xl mb-2">No Players Added Yet</p>
+              <p className="text-gray-400 text-sm">Add players in the Django admin.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

@@ -2,33 +2,34 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { getNews, getArticle } from '../services/api'
 
-function ArticleCard({ article }) {
+/* ── Article card (dark image overlay) ────────────────── */
+function ArticleCard({ article, featured = false }) {
   return (
-    <Link to={`/news/${article.slug}`} className="group">
-      <div className="bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition-shadow h-full flex flex-col">
-        <div className="bg-[#1B4332] h-48 overflow-hidden flex-shrink-0">
-          {article.cover_image ? (
-            <img
-              src={article.cover_image}
-              alt={article.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="text-[#BEFF00] text-4xl font-black">GFC</span>
-            </div>
-          )}
-        </div>
-        <div className="p-5 flex flex-col flex-1">
-          <p className="text-[#1B4332] text-xs font-semibold uppercase tracking-wider mb-2">
-            {article.category_name}
+    <Link to={`/news/${article.slug}`} className="group block h-full">
+      <div className={`relative overflow-hidden bg-gfc-800 h-full ${featured ? 'min-h-[420px]' : 'min-h-[260px]'}`}>
+        {article.cover_image ? (
+          <img
+            src={article.cover_image}
+            alt={article.title}
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-600 opacity-70"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-gfc-800">
+            <span className="text-gfc-lime/[0.06] font-black select-none" style={{ fontSize: '120px', lineHeight: 1 }}>GFC</span>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-5">
+          <p className="text-gfc-lime text-[10px] font-black uppercase tracking-widest mb-2">
+            {article.category_name || 'Club News'}
           </p>
-          <h3 className="font-bold text-gray-800 text-lg leading-snug group-hover:text-[#1B4332] transition-colors flex-1">
+          <h3 className={`text-white font-black uppercase leading-tight group-hover:text-gfc-lime transition-colors ${featured ? 'text-xl md:text-2xl' : 'text-sm'}`}>
             {article.title}
           </h3>
-          <p className="text-gray-400 text-xs mt-3">
+          <p className="text-gray-500 text-xs mt-2 flex items-center gap-2">
+            <span className="w-3 h-px bg-gfc-lime inline-block flex-shrink-0" />
             {new Date(article.created_at).toLocaleDateString('en-GB', {
-              day: 'numeric', month: 'long', year: 'numeric'
+              day: 'numeric', month: 'long', year: 'numeric',
             })}
           </p>
         </div>
@@ -37,6 +38,7 @@ function ArticleCard({ article }) {
   )
 }
 
+/* ── News list page ────────────────────────────────────── */
 export function NewsList() {
   const { data: articles, isLoading, isError } = useQuery({
     queryKey: ['news'],
@@ -44,44 +46,69 @@ export function NewsList() {
   })
 
   if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-[#1B4332] font-bold animate-pulse">Loading news...</p>
+    <div className="min-h-screen bg-gfc-900 flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-gfc-lime font-black text-3xl animate-pulse mb-2">GFC</div>
+        <p className="text-gray-600 text-[10px] uppercase tracking-widest">Loading...</p>
+      </div>
     </div>
   )
 
   if (isError) return (
     <div className="min-h-screen flex items-center justify-center">
-      <p className="text-red-500">Failed to load news.</p>
+      <p className="text-red-500 text-sm">Failed to load news.</p>
     </div>
   )
 
   return (
     <div>
-      <section className="bg-[#1B4332] text-white py-16 px-4">
+      {/* Header (dark) */}
+      <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
         <div className="max-w-7xl mx-auto">
-          <p className="text-[#BEFF00] text-sm font-semibold uppercase tracking-widest mb-2">
-            Hillyfielders Gorkha FC
-          </p>
-          <h1 className="text-5xl font-black">Latest News</h1>
+          <p className="eyebrow mb-5">Hillyfielders Gorkha FC</p>
+          <h1 className="font-black uppercase leading-none" style={{ fontSize: 'clamp(48px, 8vw, 88px)' }}>
+            Latest News
+          </h1>
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        {!articles?.length ? (
-          <div className="text-center py-20 text-gray-400">
-            <p className="text-5xl mb-4">📰</p>
-            <p className="font-semibold">No articles published yet.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {articles.map(a => <ArticleCard key={a.id} article={a} />)}
-          </div>
-        )}
+      {/* Article grid (white) */}
+      <div className="bg-white">
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          {!articles?.length ? (
+            <div className="text-center py-24 border border-gray-100 bg-gray-50">
+              <p className="text-gfc-700/20 font-black text-5xl mb-4" style={{ fontFamily: 'Oswald, sans-serif' }}>GFC</p>
+              <p className="text-gray-400 font-bold text-sm uppercase tracking-widest">No Articles Yet</p>
+              <p className="text-gray-300 text-sm mt-1">Check back soon for club updates.</p>
+            </div>
+          ) : articles.length >= 3 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="md:col-span-2"><ArticleCard article={articles[0]} featured /></div>
+                <div className="flex flex-col gap-4">
+                  {articles.slice(1, 3).map(a => (
+                    <div key={a.id} className="flex-1"><ArticleCard article={a} /></div>
+                  ))}
+                </div>
+              </div>
+              {articles.length > 3 && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {articles.slice(3).map(a => <ArticleCard key={a.id} article={a} />)}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {articles.map(a => <ArticleCard key={a.id} article={a} />)}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
+/* ── Article detail page ───────────────────────────────── */
 export function ArticleDetail() {
   const { slug } = useParams()
 
@@ -91,55 +118,63 @@ export function ArticleDetail() {
   })
 
   if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-[#1B4332] font-bold animate-pulse">Loading article...</p>
+    <div className="min-h-screen bg-gfc-900 flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-gfc-lime font-black text-3xl animate-pulse mb-2">GFC</div>
+        <p className="text-gray-600 text-[10px] uppercase tracking-widest">Loading...</p>
+      </div>
     </div>
   )
 
   if (isError) return (
     <div className="min-h-screen flex items-center justify-center">
-      <p className="text-red-500">Article not found.</p>
+      <p className="text-red-500 text-sm">Article not found.</p>
     </div>
   )
 
   return (
     <div>
       {/* Hero image */}
-      {article.cover_image && (
-        <div className="w-full h-72 md:h-96 overflow-hidden">
-          <img
-            src={article.cover_image}
-            alt={article.title}
-            className="w-full h-full object-cover"
-          />
+      {article.cover_image ? (
+        <div className="w-full h-64 md:h-[480px] overflow-hidden relative bg-gfc-900">
+          <img src={article.cover_image} alt={article.title} className="w-full h-full object-cover opacity-75" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         </div>
+      ) : (
+        <div className="section-bg bg-gfc-900 h-40" />
       )}
 
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <Link
-          to="/news"
-          className="text-[#1B4332] text-sm font-semibold hover:underline mb-6 inline-block"
-        >
-          ← Back to News
-        </Link>
+      {/* Article body (white) */}
+      <div className="bg-white">
+        <div className="max-w-3xl mx-auto px-6 py-12">
+          <Link
+            to="/news"
+            className="inline-flex items-center gap-2 text-gfc-700 text-[10px] font-black uppercase tracking-widest hover:text-gfc-500 transition-colors mb-10"
+          >
+            ← Back to News
+          </Link>
 
-        <p className="text-[#1B4332] text-xs font-semibold uppercase tracking-wider mb-3">
-          {article.category_name}
-        </p>
+          <p className="text-gfc-700 text-[10px] font-black uppercase tracking-widest mb-4">
+            {article.category_name || 'Club News'}
+          </p>
 
-        <h1 className="text-4xl font-black text-gray-800 leading-tight mb-4">
-          {article.title}
-        </h1>
+          <h1 className="font-black uppercase text-gray-900 leading-tight mb-6" style={{ fontSize: 'clamp(28px, 4vw, 52px)' }}>
+            {article.title}
+          </h1>
 
-        <p className="text-gray-400 text-sm mb-8">
-          {article.author_name && `By ${article.author_name} · `}
-          {new Date(article.created_at).toLocaleDateString('en-GB', {
-            day: 'numeric', month: 'long', year: 'numeric'
-          })}
-        </p>
+          <div className="flex items-center gap-4 mb-10 pb-8 border-b border-gray-100">
+            <span className="w-6 h-0.5 bg-gfc-700" />
+            <p className="text-gray-400 text-xs uppercase tracking-widest">
+              {article.author_name && <span className="text-gray-600 font-semibold mr-2">{article.author_name}</span>}
+              {new Date(article.created_at).toLocaleDateString('en-GB', {
+                day: 'numeric', month: 'long', year: 'numeric',
+              })}
+            </p>
+          </div>
 
-        <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed whitespace-pre-line">
-          {article.content}
+          <div className="text-gray-600 leading-relaxed text-base whitespace-pre-line">
+            {article.content}
+          </div>
         </div>
       </div>
     </div>
