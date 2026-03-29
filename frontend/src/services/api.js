@@ -21,3 +21,6 @@ export const getArticle = (slug) =>
 
 export const getSponsors = () =>
   api.get('/sponsors/').then(r => r.data)
+
+export const sendContactMessage = (data) =>
+  api.post('/contact/', data).then(r => r.data)
