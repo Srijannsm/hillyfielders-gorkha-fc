@@ -7,6 +7,8 @@ import Fixtures from './pages/Fixtures'
 import { NewsList, ArticleDetail } from './pages/News'
 import Sponsors from './pages/Sponsors'
 import Contact from './pages/Contact'
+import Gallery from './pages/Gallery'
+import About from './pages/About'
 
 function ComingSoon({ page }) {
   return (
@@ -46,6 +48,12 @@ export default function App() {
           {/* News */}
           <Route path="/news" element={<NewsList />} />
           <Route path="/news/:slug" element={<ArticleDetail />} />
+
+          {/* Gallery */}
+          <Route path="/gallery" element={<Gallery />} />
+
+          {/* About */}
+          <Route path="/about" element={<About />} />
 
           {/* Other pages */}
           <Route path="/sponsors" element={<Sponsors />} />

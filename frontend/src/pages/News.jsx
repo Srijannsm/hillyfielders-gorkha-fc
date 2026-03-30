@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { getNews, getArticle } from '../services/api'
+import SEO from '../components/SEO'
 
 /* ── Article card (dark image overlay) ────────────────── */
 function ArticleCard({ article, featured = false }) {
@@ -62,6 +63,10 @@ export function NewsList() {
 
   return (
     <div>
+      <SEO
+        title="Latest News"
+        description="Latest news, match reports and announcements from Hillyfielders Gorkha FC."
+      />
       {/* Header (dark) */}
       <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
         <div className="max-w-7xl mx-auto">

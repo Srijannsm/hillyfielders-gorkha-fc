@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { sendContactMessage } from '../services/api'
+import SEO from '../components/SEO'
 
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', message: '' })
@@ -29,6 +30,10 @@ export default function Contact() {
 
   return (
     <div>
+      <SEO
+        title="Contact Us"
+        description="Get in touch with Hillyfielders Gorkha FC. Located at TOC Turf, Gorkha, Gandaki Pradesh, Nepal."
+      />
       {/* Header (dark) */}
       <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
         <div className="max-w-7xl mx-auto">

@@ -24,3 +24,9 @@ export const getSponsors = () =>
 
 export const sendContactMessage = (data) =>
   api.post('/contact/', data).then(r => r.data)
+
+export const getGallery = (category) =>
+  api.get(`/gallery/${category ? `?category=${category}` : ''}`).then(r => r.data)
+
+export const getClubProfile = () =>
+  api.get('/club/').then(r => r.data)

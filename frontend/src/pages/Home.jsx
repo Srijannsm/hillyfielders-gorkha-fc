@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { getNews, getFixtures, getSponsors } from '../services/api'
+import SEO from '../components/SEO'
 
 const MENS_SLUG = 'mens-senior'
 const WOMENS_SLUG = 'womens-u16'
@@ -238,6 +239,10 @@ export default function Home() {
 
   return (
     <div>
+      <SEO
+        title="Home"
+        description="Official website of Hillyfielders Gorkha FC — grassroots football from the heart of Gorkha, Nepal. U-16 Girls team, Academy programme and senior teams coming soon."
+      />
 
       {/* ── HERO (dark) ──────────────────────────────────── */}
       <section className="hero-bg min-h-screen flex flex-col justify-end relative overflow-hidden">

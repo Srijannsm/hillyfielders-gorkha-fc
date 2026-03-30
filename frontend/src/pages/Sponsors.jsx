@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { getSponsors } from '../services/api'
+import SEO from '../components/SEO'
 
 const TIER_ORDER = ['platinum', 'gold', 'silver']
 const TIER_CONFIG = {
@@ -50,6 +51,10 @@ export default function Sponsors() {
 
   return (
     <div>
+      <SEO
+        title="Club Sponsors"
+        description="Our valued sponsors and partners who support Hillyfielders Gorkha FC."
+      />
       {/* Header (dark) */}
       <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
         <div className="max-w-7xl mx-auto">

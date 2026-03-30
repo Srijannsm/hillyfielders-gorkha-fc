@@ -126,6 +126,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-stretch gap-0.5">
 
           <NavLink to="/" end className={navLinkClass}>Home</NavLink>
+          <NavLink to="/about"    className={navLinkClass}>About</NavLink>
 
           {/* OUR TEAMS mega-menu */}
           <div className="relative nav-item flex items-stretch">
@@ -139,6 +140,7 @@ export default function Navbar() {
           </div>
 
           <NavLink to="/news"     className={navLinkClass}>News</NavLink>
+          <NavLink to="/gallery"  className={navLinkClass}>Gallery</NavLink>
           <NavLink to="/sponsors" className={navLinkClass}>Sponsors</NavLink>
           <NavLink to="/contact"  className={navLinkClass}>Contact</NavLink>
 
@@ -172,6 +174,7 @@ export default function Navbar() {
           <Link to="/" className="block px-6 py-3.5 text-white text-xs font-black uppercase tracking-widest border-b border-gfc-700 hover:text-gfc-lime transition-colors" onClick={close}>
             Home
           </Link>
+          <Link to="/about" className="block px-6 py-3.5 text-white text-xs font-black uppercase tracking-widest border-b border-gfc-700 hover:text-gfc-lime transition-colors" onClick={close}>About</Link>
 
           {/* OUR TEAMS accordion */}
           <div>
@@ -235,6 +238,7 @@ export default function Navbar() {
           </div>
 
           <Link to="/news"     className="block px-6 py-3.5 text-white text-xs font-black uppercase tracking-widest border-b border-gfc-700 hover:text-gfc-lime transition-colors" onClick={close}>News</Link>
+          <Link to="/gallery"  className="block px-6 py-3.5 text-white text-xs font-black uppercase tracking-widest border-b border-gfc-700 hover:text-gfc-lime transition-colors" onClick={close}>Gallery</Link>
           <Link to="/sponsors" className="block px-6 py-3.5 text-white text-xs font-black uppercase tracking-widest border-b border-gfc-700 hover:text-gfc-lime transition-colors" onClick={close}>Sponsors</Link>
           <Link to="/contact"  className="block px-6 py-3.5 text-white text-xs font-black uppercase tracking-widest border-b border-gfc-700 hover:text-gfc-lime transition-colors" onClick={close}>Contact</Link>
           <Link to="/academy"  className="block px-6 py-3.5 text-gfc-lime text-xs font-black uppercase tracking-widest" onClick={close}>Academy →</Link>

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import { getTeams } from '../services/api'
 import TeamPageTabs from '../components/TeamPageTabs'
+import SEO from '../components/SEO'
 
 const TEAM_LABELS = {
   'mens-senior':   { name: "Men's Senior Team",   programme: "Men's Programme" },
@@ -162,6 +163,10 @@ export default function Squad() {
 
   return (
     <div>
+      <SEO
+        title={TEAM_LABELS[teamType]?.name ?? 'Squad'}
+        description={`Meet the players of the ${TEAM_LABELS[teamType]?.name ?? 'Hillyfielders Gorkha FC'} squad.`}
+      />
       {/* Header (dark) */}
       <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">

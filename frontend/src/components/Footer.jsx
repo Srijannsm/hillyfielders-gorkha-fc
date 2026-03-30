@@ -113,7 +113,9 @@ export default function Footer() {
           <FooterHeading>Club</FooterHeading>
           <div className="flex flex-col gap-2.5 mb-8">
             {[
+              { label: 'About the Club', to: '/about' },
               { label: 'Latest News',  to: '/news' },
+              { label: 'Gallery',      to: '/gallery' },
               { label: 'Sponsors',     to: '/sponsors' },
               { label: 'Academy',      to: '/academy' },
               { label: 'Contact Us',   to: '/contact' },

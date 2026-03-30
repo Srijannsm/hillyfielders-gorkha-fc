@@ -11,4 +11,6 @@ urlpatterns = [
     path('api/news/', include('news.urls')),
     path('api/sponsors/', include('sponsors.urls')),
     path('api/contact/', ContactView.as_view(), name='contact'),
+    path('api/gallery/', include('gallery.urls')),
+    path('api/club/', include('club.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

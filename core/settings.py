@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     'accounts',
     'tickets',
     'sponsors',
+    'gallery',
+    'club',
 ]
 
 MIDDLEWARE = [

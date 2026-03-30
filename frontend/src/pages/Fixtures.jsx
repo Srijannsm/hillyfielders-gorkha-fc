@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useParams, useLocation } from 'react-router-dom'
 import { getFixtures } from '../services/api'
 import TeamPageTabs from '../components/TeamPageTabs'
+import SEO from '../components/SEO'
 
 const TEAM_LABELS = {
   'mens-senior':   "Men's Senior Team",
@@ -133,6 +134,10 @@ export default function Fixtures() {
 
   return (
     <div>
+      <SEO
+        title="Fixtures & Results"
+        description="Upcoming fixtures and latest results for Hillyfielders Gorkha FC teams."
+      />
       {/* Header (dark) */}
       <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
         <div className="max-w-7xl mx-auto">
