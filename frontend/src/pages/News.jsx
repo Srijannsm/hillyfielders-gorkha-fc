@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { getNews, getArticle } from '../services/api'
 import SEO from '../components/SEO'
+import NewsCardSkeleton from '../components/skeletons/NewsCardSkeleton'
 
 /* ── Article card (dark image overlay) ────────────────── */
 function ArticleCard({ article, featured = false }) {
@@ -33,6 +34,9 @@ function ArticleCard({ article, featured = false }) {
               day: 'numeric', month: 'long', year: 'numeric',
             })}
           </p>
+          <p className="text-gfc-lime text-[10px] font-black uppercase tracking-widest mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            Read More →
+          </p>
         </div>
       </div>
     </Link>
@@ -45,15 +49,6 @@ export function NewsList() {
     queryKey: ['news'],
     queryFn: getNews,
   })
-
-  if (isLoading) return (
-    <div className="min-h-screen bg-gfc-900 flex items-center justify-center">
-      <div className="text-center">
-        <div className="text-gfc-lime font-black text-3xl animate-pulse mb-2">GFC</div>
-        <p className="text-gray-600 text-[10px] uppercase tracking-widest">Loading...</p>
-      </div>
-    </div>
-  )
 
   if (isError) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -77,35 +72,43 @@ export function NewsList() {
         </div>
       </section>
 
+      {/* Lime divider */}
+      <div className="h-1 bg-gfc-lime" />
+
       {/* Article grid (white) */}
       <div className="bg-white">
         <div className="max-w-7xl mx-auto px-6 py-12">
-          {!articles?.length ? (
+          {isLoading ? (
+            <NewsCardSkeleton count={6} />
+          ) : !articles?.length ? (
             <div className="text-center py-24 border border-gray-100 bg-gray-50">
               <p className="text-gfc-700/20 font-black text-5xl mb-4" style={{ fontFamily: 'Oswald, sans-serif' }}>GFC</p>
               <p className="text-gray-400 font-bold text-sm uppercase tracking-widest">No Articles Yet</p>
               <p className="text-gray-300 text-sm mt-1">Check back soon for club updates.</p>
             </div>
-          ) : articles.length >= 3 ? (
+          ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="md:col-span-2"><ArticleCard article={articles[0]} featured /></div>
-                <div className="flex flex-col gap-4">
+              {/* Hero — first article full width */}
+              <div className="mb-4">
+                <ArticleCard article={articles[0]} featured />
+              </div>
+
+              {/* Articles 2 & 3 — side by side */}
+              {articles.length > 1 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   {articles.slice(1, 3).map(a => (
-                    <div key={a.id} className="flex-1"><ArticleCard article={a} /></div>
+                    <ArticleCard key={a.id} article={a} />
                   ))}
                 </div>
-              </div>
+              )}
+
+              {/* Articles 4+ — 3-column grid */}
               {articles.length > 3 && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {articles.slice(3).map(a => <ArticleCard key={a.id} article={a} />)}
                 </div>
               )}
             </>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {articles.map(a => <ArticleCard key={a.id} article={a} />)}
-            </div>
           )}
         </div>
       </div>

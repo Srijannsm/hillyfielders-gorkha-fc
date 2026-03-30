@@ -26,7 +26,7 @@ export default function Contact() {
     }
   }
 
-  const inputClass = "w-full border border-gray-200 text-gray-900 text-sm px-4 py-3 focus:outline-none focus:border-gfc-700 transition-colors placeholder:text-gray-300 rounded-none"
+  const inputClass = "w-full border border-gray-200 text-gray-900 text-sm px-4 py-3 focus:outline-none focus:border-gfc-lime focus:ring-2 focus:ring-gfc-lime/20 transition-colors placeholder:text-gray-300 rounded-none"
 
   return (
     <div>
@@ -44,6 +44,9 @@ export default function Contact() {
         </div>
       </section>
 
+      {/* Lime divider */}
+      <div className="h-1 bg-gfc-lime" />
+
       {/* Body (white) */}
       <div className="bg-white">
         <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-5 gap-12">
@@ -51,22 +54,43 @@ export default function Contact() {
           {/* Club info */}
           <div className="lg:col-span-2">
             <h2 className="text-gray-900 font-black uppercase text-2xl mb-8">Hillyfielders Gorkha FC</h2>
-            <div className="flex flex-col gap-7">
+            <div className="flex flex-col gap-4">
               {[
-                { label: 'Location', content: <p className="text-gray-500 text-sm leading-relaxed">Gorkha, Gandaki Pradesh<br />Nepal</p> },
-                { label: 'Home Ground', content: <p className="text-gray-500 text-sm">TOC Turf, Gorkha</p> },
                 {
+                  icon: '📍',
+                  label: 'Location',
+                  content: <p className="text-gray-500 text-sm leading-relaxed">Gorkha, Gandaki Pradesh<br />Nepal</p>,
+                },
+                {
+                  icon: '🏟',
+                  label: 'Home Ground',
+                  content: <p className="text-gray-500 text-sm">TOC Turf, Gorkha</p>,
+                },
+                {
+                  icon: '✉',
                   label: 'Email',
                   content: (
                     <a href="mailto:info@gorkhafc.com" className="text-gray-500 text-sm hover:text-gfc-700 transition-colors">
                       info@gorkhafc.com
                     </a>
-                  )
+                  ),
                 },
-              ].map(({ label, content }) => (
-                <div key={label}>
-                  <p className="eyebrow-light mb-2">{label}</p>
-                  {content}
+                {
+                  icon: '💬',
+                  label: 'WhatsApp',
+                  content: (
+                    <a href="https://wa.me/9779861882503" target="_blank" rel="noopener noreferrer" className="text-gray-500 text-sm hover:text-gfc-700 transition-colors">
+                      +977 986-1882503
+                    </a>
+                  ),
+                },
+              ].map(({ icon, label, content }) => (
+                <div key={label} className="flex items-start gap-4 border border-gray-100 p-4 hover:border-gfc-lime/30 transition-colors">
+                  <span className="text-xl flex-shrink-0 mt-0.5">{icon}</span>
+                  <div>
+                    <p className="eyebrow-light mb-1">{label}</p>
+                    {content}
+                  </div>
                 </div>
               ))}
 
@@ -77,9 +101,10 @@ export default function Contact() {
                     { label: 'Facebook',  href: 'https://www.facebook.com/HillyFielders/' },
                     { label: 'Instagram', href: '#' },
                     { label: 'YouTube',   href: '#' },
+                    { label: 'WhatsApp',  href: 'https://wa.me/977XXXXXXXXXX' },
                   ].map(s => (
                     <a
-                      key={s.label}
+                      key={s.label} 
                       href={s.href}
                       target={s.href !== '#' ? '_blank' : undefined}
                       rel="noopener noreferrer"
@@ -138,6 +163,32 @@ export default function Contact() {
               <p className="text-gray-400 text-xs text-center">We'll respond within 48 hours.</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Find Us — Google Maps */}
+      <div className="bg-white border-t border-gray-100 px-6 py-16">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <p className="eyebrow-light mb-4">Our Location</p>
+            <h2 className="text-gray-900 font-black uppercase text-2xl">Find Us</h2>
+          </div>
+          <div className="rounded-2xl overflow-hidden shadow-lg">
+            <iframe
+              title="Gorkha, Gandaki Pradesh, Nepal"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d56516.27063411159!2d84.5978!3d28.0001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3995826957a2fab7%3A0x1a4b7f8a0e3a8e9e!2sGorkha%2C%20Gandaki%20Pradesh%2C%20Nepal!5e0!3m2!1sen!2snp!4v1234567890!5m2!1sen!2snp"
+              width="100%"
+              height="400"
+              style={{ border: 0, display: 'block' }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+          <p className="text-gray-400 text-sm mt-4 flex items-center gap-2">
+            <span className="w-3 h-px bg-gfc-700 inline-block" />
+            TOC Turf, Gorkha, Gandaki Pradesh, Nepal
+          </p>
         </div>
       </div>
     </div>

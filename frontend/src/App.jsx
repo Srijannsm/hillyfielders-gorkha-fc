@@ -9,6 +9,8 @@ import Sponsors from './pages/Sponsors'
 import Contact from './pages/Contact'
 import Gallery from './pages/Gallery'
 import About from './pages/About'
+import WhatsAppButton from './components/WhatsAppButton'
+import ScrollToTop from './components/ScrollToTop'
 
 function ComingSoon({ page }) {
   return (
@@ -64,6 +66,8 @@ export default function App() {
         </Routes>
       </main>
       <Footer />
+      <WhatsAppButton />
+      <ScrollToTop />
     </div>
   )
 }

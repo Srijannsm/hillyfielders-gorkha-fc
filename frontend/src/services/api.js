@@ -10,6 +10,9 @@ export const getPlayers = (team) =>
 export const getTeams = () =>
   api.get('/players/teams/').then(r => r.data)
 
+export const getProgrammes = () =>
+  api.get('/players/programmes/').then(r => r.data)
+
 export const getFixtures = (team, completed) =>
   api.get(`/fixtures/?team=${team || ''}&completed=${completed ?? ''}`).then(r => r.data)
 

@@ -28,16 +28,24 @@ function StatCard({ label, value }) {
 }
 
 /* ── Mission/Vision/Values card ─────────────────────────── */
-function PillarCard({ icon, heading, body }) {
+function PillarCard({ icon, heading, body, number }) {
   return (
-    <div className="border border-gfc-700 bg-gfc-800 p-8 flex flex-col gap-4">
-      <div className="w-10 h-10 bg-gfc-lime flex items-center justify-center flex-shrink-0">
+    <div className="border border-gfc-700 bg-gfc-800 p-8 flex flex-col gap-4 relative overflow-hidden">
+      {/* Background number */}
+      <span
+        className="absolute -bottom-4 -right-2 font-black text-white/[0.04] select-none pointer-events-none leading-none"
+        style={{ fontFamily: 'Oswald, sans-serif', fontSize: '120px' }}
+        aria-hidden
+      >
+        {number}
+      </span>
+      <div className="w-10 h-10 bg-gfc-lime flex items-center justify-center flex-shrink-0 relative z-10">
         <span className="text-gfc-900 text-lg">{icon}</span>
       </div>
-      <h3 className="text-white font-black uppercase text-lg" style={{ fontFamily: 'Oswald, sans-serif' }}>
+      <h3 className="text-white font-black uppercase text-lg relative z-10" style={{ fontFamily: 'Oswald, sans-serif' }}>
         {heading}
       </h3>
-      <p className="text-gray-400 text-sm leading-relaxed">{body}</p>
+      <p className="text-gray-400 text-sm leading-relaxed relative z-10">{body}</p>
     </div>
   )
 }
@@ -99,6 +107,9 @@ export default function About() {
         </div>
       </section>
 
+      {/* Lime divider */}
+      <div className="h-1 bg-gfc-lime" />
+
       {/* ── SECTION 2: Our Story ── */}
       <section className="bg-white px-6 py-20">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-12 items-start">
@@ -138,9 +149,9 @@ export default function About() {
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <PillarCard icon="⚽" heading="Our Mission" body={club.mission} />
-            <PillarCard icon="🏆" heading="Our Vision"  body={club.vision} />
-            <PillarCard icon="🤝" heading="Our Values"  body={club.values} />
+            <PillarCard icon="⚽" heading="Our Mission" body={club.mission} number="01" />
+            <PillarCard icon="🏆" heading="Our Vision"  body={club.vision}   number="02" />
+            <PillarCard icon="🤝" heading="Our Values"  body={club.values}   number="03" />
           </div>
         </div>
       </section>

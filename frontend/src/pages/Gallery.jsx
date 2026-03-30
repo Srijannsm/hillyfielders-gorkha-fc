@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getGallery } from '../services/api'
 import SEO from '../components/SEO'
+import GallerySkeleton from '../components/skeletons/GallerySkeleton'
 
 /* ── Category filter config ─────────────────────────────── */
 const TABS = [
@@ -17,15 +18,6 @@ const BADGE_COLORS = {
   matchday:  'bg-gfc-700/80 text-gfc-lime',
   academy:   'bg-purple-900/80 text-purple-200',
   team:      'bg-gfc-800/80 text-white',
-}
-
-/* ── Skeleton card ──────────────────────────────────────── */
-function SkeletonCard({ tall }) {
-  return (
-    <div
-      className={`bg-gfc-800 animate-pulse rounded-sm mb-4 ${tall ? 'h-72' : 'h-48'}`}
-    />
-  )
 }
 
 /* ── Lightbox ───────────────────────────────────────────── */
@@ -110,27 +102,18 @@ function PhotoCard({ photo, onClick }) {
         loading="lazy"
       />
 
-      {/* Hover overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
       {/* Category badge — always visible */}
-      <span className={`absolute top-3 left-3 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-sm ${BADGE_COLORS[photo.category] || 'bg-gfc-700 text-white'}`}>
+      <span className={`absolute top-3 left-3 z-10 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-sm ${BADGE_COLORS[photo.category] || 'bg-gfc-700 text-white'}`}>
         {photo.category_display}
       </span>
 
-      {/* Title + caption — visible on hover */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-        <p className="text-white font-black uppercase text-sm leading-tight" style={{ fontFamily: 'Oswald, sans-serif' }}>
+      {/* Full dark overlay on hover — title centered */}
+      <div className="absolute inset-0 bg-black/85 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-5 z-20">
+        <p className="text-white font-black uppercase text-center text-base leading-tight" style={{ fontFamily: 'Oswald, sans-serif' }}>
           {photo.title}
         </p>
-        {photo.caption && (
-          <p className="text-gray-300 text-xs mt-1 line-clamp-2 leading-relaxed">{photo.caption}</p>
-        )}
-      </div>
-
-      {/* Expand icon */}
-      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <div className="w-7 h-7 bg-gfc-lime/90 flex items-center justify-center">
+        <div className="w-8 h-0.5 bg-gfc-lime my-3" />
+        <div className="w-8 h-8 bg-gfc-lime flex items-center justify-center mt-1">
           <svg className="w-3.5 h-3.5 text-gfc-900" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 3h6m0 0v6m0-6L14 10M9 21H3m0 0v-6m0 6l7-7" />
           </svg>
@@ -160,10 +143,21 @@ export default function Gallery() {
   const [activeCategory, setActiveCategory] = useState('')
   const [lightboxPhoto, setLightboxPhoto] = useState(null)
 
-  const { data: photos, isLoading } = useQuery({
-    queryKey: ['gallery', activeCategory],
-    queryFn: () => getGallery(activeCategory),
+  // Fetch all photos once, filter client-side
+  const { data: allPhotos, isLoading } = useQuery({
+    queryKey: ['gallery'],
+    queryFn: () => getGallery(''),
   })
+
+  const photos = activeCategory
+    ? allPhotos?.filter(p => p.category === activeCategory)
+    : allPhotos
+
+  // Count per category
+  const counts = allPhotos?.reduce((acc, p) => {
+    acc[p.category] = (acc[p.category] || 0) + 1
+    return acc
+  }, {}) ?? {}
 
   const openLightbox = useCallback((photo) => setLightboxPhoto(photo), [])
   const closeLightbox = useCallback(() => setLightboxPhoto(null), [])
@@ -192,19 +186,31 @@ export default function Gallery() {
       <div className="bg-gfc-800 border-b border-gfc-700 sticky top-[73px] z-40">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-stretch gap-0 overflow-x-auto no-scrollbar">
-            {TABS.map(tab => (
-              <button
-                key={tab.value}
-                onClick={() => setActiveCategory(tab.value)}
-                className={`flex-shrink-0 px-5 py-4 text-[11px] font-black uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap ${
-                  activeCategory === tab.value
-                    ? 'text-gfc-lime border-gfc-lime'
-                    : 'text-gray-400 border-transparent hover:text-white hover:border-gfc-lime/40'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+            {TABS.map(tab => {
+              const count = tab.value === '' ? allPhotos?.length : counts[tab.value]
+              return (
+                <button
+                  key={tab.value}
+                  onClick={() => setActiveCategory(tab.value)}
+                  className={`flex-shrink-0 px-6 py-5 text-[11px] font-black uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
+                    activeCategory === tab.value
+                      ? 'text-gfc-lime border-gfc-lime'
+                      : 'text-gray-400 border-transparent hover:text-white hover:border-gfc-lime/40'
+                  }`}
+                >
+                  {tab.label}
+                  {count != null && count > 0 && (
+                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-sm leading-none ${
+                      activeCategory === tab.value
+                        ? 'bg-gfc-lime text-gfc-900'
+                        : 'bg-gfc-700 text-gray-400'
+                    }`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
           </div>
         </div>
       </div>
@@ -212,12 +218,7 @@ export default function Gallery() {
       {/* ── Masonry grid ── */}
       <div className="max-w-7xl mx-auto px-6 py-10">
         {isLoading ? (
-          /* Skeleton — mimics 3-col masonry */
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <SkeletonCard key={i} tall={i % 3 === 0} />
-            ))}
-          </div>
+          <GallerySkeleton count={8} />
         ) : !photos?.length ? (
           <EmptyState category={activeCategory} />
         ) : (

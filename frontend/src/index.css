@@ -41,9 +41,16 @@ h1, h2, h3, h4, .font-display {
 /* ── Inner page headers ───────────────────────────── */
 .section-bg {
   background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(255, 255, 255, 0.02) 10px,
+      rgba(255, 255, 255, 0.02) 11px
+    ),
     linear-gradient(rgba(21, 43, 23, 0.95), rgba(21, 43, 23, 0.95)),
     url('https://images.unsplash.com/photo-1459865264687-595d652de67e?w=1200&q=60');
-  background-size: cover;
+  background-size: auto, cover, cover;
   background-position: center;
 }
 

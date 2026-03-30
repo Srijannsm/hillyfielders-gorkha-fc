@@ -10,7 +10,7 @@ class FixtureListView(generics.ListAPIView):
         team_type = self.request.query_params.get('team')
         completed = self.request.query_params.get('completed')
         if team_type:
-            queryset = queryset.filter(our_team__team_type=team_type)
+            queryset = queryset.filter(our_team__slug=team_type)
         if completed is not None:
             queryset = queryset.filter(is_completed=completed == 'true')
         return queryset

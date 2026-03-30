@@ -1,21 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { getNews, getFixtures, getSponsors } from '../services/api'
+import { getNews, getFixtures, getSponsors, getProgrammes } from '../services/api'
 import SEO from '../components/SEO'
 
 const MENS_SLUG = 'mens-senior'
 const WOMENS_SLUG = 'womens-u16'
-
-const SLUG_LABEL = {
-  'mens-senior': 'Senior',
-  'mens-u16': 'U-16',
-  'mens-u14': 'U-14',
-  'mens-u12': 'U-12',
-  'womens-senior': 'Senior',
-  'womens-u16': 'U-16',
-  'womens-u14': 'U-14',
-  'womens-u12': 'U-12',
-}
 
 /* ── News card ─────────────────────────────────────────── */
 function NewsCard({ article, featured = false }) {
@@ -55,7 +44,6 @@ function NewsCard({ article, featured = false }) {
 
 /* ── Single programme fixture column ───────────────────── */
 function FixtureColumn({ label, slug, fixture, isLoading }) {
-  const teamLabel = SLUG_LABEL[slug] ?? null
   // Detect GFC's side by club name — more reliable than the is_home_game flag
   const gfcPattern = /hillyfielders|gorkha\s*fc/i
   const gfcIsHome = fixture
@@ -91,13 +79,6 @@ function FixtureColumn({ label, slug, fixture, isLoading }) {
 
           {/* Meta */}
           <div className="flex items-center justify-between">
-            {teamLabel && (
-              <div className="flex justify-center">
-                <span className="bg-gfc-lime text-gfc-900 text-[9px] font-black px-3 py-1 uppercase tracking-widest">
-                  {teamLabel}
-                </span>
-              </div>
-            )}
             <div>
               <p className="text-gray-400 text-xs">
                 {new Date(fixture.date).toLocaleDateString('en-GB', {
@@ -163,8 +144,8 @@ function FixturesBand({ mensFixtures, womensFixtures, mensLoading, womensLoading
 /* ── Stat cell ─────────────────────────────────────────── */
 function Stat({ number, label }) {
   return (
-    <div className="text-center px-6 py-6 border-r border-black/20 last:border-r-0">
-      <p className="text-gfc-900 font-black leading-none" style={{ fontSize: 'clamp(30px, 4.5vw, 48px)', fontFamily: 'Oswald, sans-serif' }}>
+    <div className="text-center px-6 py-16 border-r border-gfc-900/15 last:border-r-0">
+      <p className="text-gfc-900 font-black leading-none" style={{ fontSize: 'clamp(40px, 5vw, 60px)', fontFamily: 'Oswald, sans-serif' }}>
         {number}
       </p>
       <p className="text-gfc-700 font-bold text-[10px] uppercase tracking-widest mt-1.5">{label}</p>
@@ -173,60 +154,34 @@ function Stat({ number, label }) {
 }
 
 /* ── Programme card (on white bg) ─────────────────────── */
-function ProgrammeCard({ programme, name, tag, active, to, letter, description }) {
-  const inner = (
-    <div className={`relative flex flex-col min-h-[300px] p-7 border-b-2 overflow-hidden transition-all ${active
-        ? 'border-b-gfc-700 border border-gray-200 hover:border-gray-300 bg-white cursor-pointer group hover:shadow-lg'
-        : 'border-b-gray-200 border border-gray-100 bg-gray-50/60 cursor-default'
-      }`}>
-      {/* Faint background letter */}
-      <span className="absolute -right-3 bottom-0 font-black leading-none select-none pointer-events-none" style={{
-        fontSize: '130px',
-        color: active ? 'rgba(44,92,48,0.07)' : 'rgba(0,0,0,0.04)',
-      }}>
-        {letter}
-      </span>
-
-      {/* Top row: programme + status */}
-      <div className="flex items-center justify-between mb-auto">
-        <p className={`text-[9px] font-black uppercase tracking-widest ${active ? 'text-gfc-700' : 'text-gray-400'}`}>
+function ProgrammeCard({ programme, name, to, description }) {
+  return (
+    <Link to={to} className="block group">
+      <div className="flex flex-col h-[280px] p-7 border-t-2 border-t-gfc-lime bg-gfc-900 hover:bg-gfc-800 transition-colors overflow-hidden">
+        <p className="text-gfc-lime/60 text-[9px] font-black uppercase tracking-widest mb-3">
           {programme}
         </p>
-        <span className={`text-[9px] font-black px-2.5 py-1 uppercase tracking-widest ${active ? 'bg-gfc-lime text-gfc-900' : 'bg-gray-100 text-gray-400'
-          }`}>
-          {tag}
-        </span>
-      </div>
-
-      {/* Bottom: name + description + cta */}
-      <div className="mt-12 relative z-10">
-        <h3 className={`font-black uppercase leading-none mb-3 ${active ? 'text-gray-900' : 'text-gray-400'}`}
-          style={{ fontSize: 'clamp(24px, 3vw, 32px)' }}>
+        <h3 className="text-white font-black uppercase leading-tight mb-3"
+          style={{ fontFamily: 'Oswald, sans-serif', fontSize: 'clamp(22px, 2.5vw, 28px)' }}>
           {name}
         </h3>
         {description && (
-          <p className={`text-xs leading-relaxed mb-4 ${active ? 'text-gray-500' : 'text-gray-400'}`}>
-            {description}
-          </p>
+          <p className="text-gray-400 text-xs leading-relaxed flex-1">{description}</p>
         )}
-        {active && to ? (
-          <p className="text-gfc-700 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 group-hover:gap-3 transition-all">
-            View Squad <span>→</span>
-          </p>
-        ) : !active && (
-          <p className="text-gray-300 text-[10px] font-black uppercase tracking-widest">
-            Launching soon
-          </p>
-        )}
+        <div className="mt-5">
+          <span className="text-gfc-lime text-[10px] font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform inline-block">
+            View Squad →
+          </span>
+        </div>
       </div>
-    </div>
+    </Link>
   )
-  return active && to ? <Link to={to} className="block">{inner}</Link> : inner
 }
 
 /* ══════════════════════════════════════════════════════════ */
 export default function Home() {
   const { data: news } = useQuery({ queryKey: ['news'], queryFn: getNews })
+  const { data: programmes = [] } = useQuery({ queryKey: ['programmes'], queryFn: getProgrammes })
   const { data: mensFixtures, isLoading: mensLoading } = useQuery({
     queryKey: ['fixtures', MENS_SLUG, 'upcoming'],
     queryFn: () => getFixtures(MENS_SLUG, false),
@@ -259,8 +214,8 @@ export default function Home() {
             Grassroots football from the heart of Gorkha — building the next generation of Nepali footballers.
           </p>
           <div className="flex gap-3 flex-wrap">
-            <Link to="/academy" className="bg-gfc-lime text-gfc-900 font-black px-8 py-4 text-xs uppercase tracking-widest hover:bg-white transition-colors">
-              Our Academy
+            <Link to="/about" className="bg-gfc-lime text-gfc-900 font-black px-8 py-4 text-xs uppercase tracking-widest hover:bg-white transition-colors">
+              About Us
             </Link>
             <Link to="/news" className="border border-white/20 text-white font-bold px-8 py-4 text-xs uppercase tracking-widest hover:border-white hover:text-white transition-colors">
               Latest News
@@ -269,6 +224,15 @@ export default function Home() {
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-gfc-900/60 to-transparent pointer-events-none" />
       </section>
+
+
+      {/* ── FIXTURES (dark, two columns) ─────────────────── */}
+      <FixturesBand
+        mensFixtures={mensFixtures}
+        womensFixtures={womensFixtures}
+        mensLoading={mensLoading}
+        womensLoading={womensLoading}
+      />
 
       {/* ── STATS STRIP (lime) ───────────────────────────── */}
       <section className="bg-gfc-lime">
@@ -279,14 +243,6 @@ export default function Home() {
           <Stat number="TOC" label="Home Turf, Gorkha" />
         </div>
       </section>
-
-      {/* ── FIXTURES (dark, two columns) ─────────────────── */}
-      <FixturesBand
-        mensFixtures={mensFixtures}
-        womensFixtures={womensFixtures}
-        mensLoading={mensLoading}
-        womensLoading={womensLoading}
-      />
 
       {/* ── LATEST NEWS (white) ──────────────────────────── */}
       <section className="bg-white py-20 px-6">
@@ -326,26 +282,31 @@ export default function Home() {
       </section>
 
       {/* ── OUR PROGRAMMES (white/light) ─────────────────── */}
-      <section className="bg-gray-50 py-20 px-6 border-t border-gray-100">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-12">
-            <p className="eyebrow-light mb-4">The Club</p>
-            <h2 className="text-gray-900 font-black uppercase" style={{ fontSize: 'clamp(36px, 5vw, 56px)' }}>
-              Our Programmes
-            </h2>
+      {programmes.some(p => p.teams.length > 0) && (
+        <section className="bg-gray-50 py-20 px-6 border-t border-gray-100">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-12">
+              <p className="eyebrow-light mb-4">The Club</p>
+              <h2 className="text-gray-900 font-black uppercase" style={{ fontSize: 'clamp(36px, 5vw, 56px)' }}>
+                Our Programmes
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {programmes.flatMap(programme =>
+                programme.teams.map(team => (
+                  <ProgrammeCard
+                    key={team.slug}
+                    programme={programme.name}
+                    name={team.name}
+                    to={`/${team.slug}/squad`}
+                    description={team.description}
+                  />
+                ))
+              )}
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { programme: "Women's", name: 'U-16 Girls', tag: 'Active', active: true, to: '/womens-u16/squad', letter: 'W' },
-              { programme: 'Academy', name: 'Youth Academy', tag: 'Active', active: true, to: '/academy', letter: 'A' },
-              { programme: "Men's", name: 'Senior Team', tag: 'Coming Soon', active: false, to: null, letter: 'M' },
-              { programme: "Women's", name: 'Senior Women', tag: 'Coming Soon', active: false, to: null, letter: 'W' },
-            ].map((card, i) => (
-              <ProgrammeCard key={i} {...card} />
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── HOME GROUND (dark) ───────────────────────────── */}
       <section className="bg-gfc-900 py-20 px-6">
@@ -365,13 +326,28 @@ export default function Home() {
               Gorkha, Gandaki Pradesh, Nepal
             </p>
           </div>
-          <div className="border border-gfc-700 aspect-video flex items-center justify-center relative overflow-hidden">
-            <div className="absolute inset-6 border border-gfc-700/30" />
-            <div className="absolute left-1/2 top-6 bottom-6 w-px bg-gfc-700/30 -translate-x-1/2" />
-            <div className="absolute left-1/2 top-1/2 w-20 h-20 border border-gfc-700/30 rounded-full -translate-x-1/2 -translate-y-1/2" />
-            <div className="relative z-10 text-center">
-              <p className="text-gfc-lime font-black uppercase" style={{ fontSize: '52px', fontFamily: 'Oswald, sans-serif', lineHeight: 1 }}>TOC</p>
-              <p className="text-gray-600 text-[10px] font-black uppercase tracking-widest mt-1">Turf · Gorkha</p>
+          <div className="border border-gfc-700 bg-gfc-800 relative overflow-hidden min-h-[280px] flex flex-col">
+            {/* Pitch markings */}
+            <div className="absolute inset-6 border border-gfc-700/20" />
+            <div className="absolute left-1/2 top-6 bottom-6 w-px bg-gfc-700/20 -translate-x-1/2" />
+            <div className="absolute left-1/2 top-1/2 w-24 h-24 border border-gfc-700/20 rounded-full -translate-x-1/2 -translate-y-1/2" />
+            {/* Content */}
+            <div className="relative z-10 p-8 flex flex-col justify-between flex-1">
+              <p className="text-gfc-lime text-[10px] font-black uppercase tracking-widest">Home Ground</p>
+              <div>
+                <p className="text-white font-black uppercase leading-none" style={{ fontFamily: 'Oswald, sans-serif', fontSize: '48px' }}>
+                  TOC TURF
+                </p>
+                <p className="text-gray-500 text-sm mt-2">Gorkha, Nepal</p>
+              </div>
+              <div className="flex flex-col gap-2">
+                {['5-a-side turf', 'Training ground', 'Home of Hillyfielders'].map(item => (
+                  <p key={item} className="text-gray-600 text-xs flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-gfc-lime rounded-full flex-shrink-0" />
+                    {item}
+                  </p>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -404,7 +380,7 @@ export default function Home() {
         </div>
         <div className="max-w-2xl mx-auto text-center relative z-10">
           <p className="eyebrow mb-6" style={{ display: 'flex', justifyContent: 'center' }}>Stay Connected</p>
-          <h2 className="text-white font-black uppercase leading-none mb-6" style={{ fontSize: 'clamp(40px, 6vw, 72px)' }}>
+          <h2 className="text-white font-black uppercase leading-none mb-6" style={{ fontSize: 'clamp(48px, 7vw, 88px)' }}>
             Follow the <span className="text-gfc-lime">Journey</span>
           </h2>
           <p className="text-gray-500 text-base leading-relaxed mb-10 max-w-lg mx-auto">
@@ -415,9 +391,12 @@ export default function Home() {
               href="https://www.facebook.com/HillyFielders/"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gfc-lime text-gfc-900 font-black px-8 py-4 text-xs uppercase tracking-widest hover:bg-white transition-colors"
+              className="bg-gfc-lime text-gfc-900 font-black px-8 py-4 text-xs uppercase tracking-widest hover:bg-white transition-colors flex items-center gap-3"
             >
               Follow on Facebook
+              <span className="bg-gfc-900/20 text-gfc-900 text-[9px] font-black px-2 py-0.5 tracking-normal normal-case rounded-full whitespace-nowrap">
+                507+ followers
+              </span>
             </a>
             <Link to="/contact" className="border border-gfc-700 text-gray-300 font-bold px-8 py-4 text-xs uppercase tracking-widest hover:border-gfc-lime hover:text-gfc-lime transition-colors">
               Get in Touch

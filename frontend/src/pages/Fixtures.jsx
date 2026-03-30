@@ -1,21 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { useParams, useLocation } from 'react-router-dom'
-import { getFixtures } from '../services/api'
+import { getFixtures, getTeams } from '../services/api'
 import TeamPageTabs from '../components/TeamPageTabs'
 import SEO from '../components/SEO'
-
-const TEAM_LABELS = {
-  'mens-senior':   "Men's Senior Team",
-  'mens-u16':      "Men's U-16",
-  'mens-u14':      "Men's U-14",
-  'mens-u12':      "Men's U-12",
-  'womens-senior': "Women's Senior Team",
-  'womens-u16':    "Women's U-16",
-  'womens-u14':    "Women's U-14",
-  'womens-u12':    "Women's U-12",
-  'mens':          "Men's First Team",
-  'womens':        "Women's First Team",
-}
+import FixtureSkeleton from '../components/skeletons/FixtureSkeleton'
 
 const RESULT_STYLE = {
   W: { bg: 'bg-green-500',  text: 'text-white', label: 'W' },
@@ -28,7 +16,9 @@ function FixtureRow({ fixture }) {
   const result = RESULT_STYLE[fixture.result]
 
   return (
-    <div className="group bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors px-6 py-5">
+    <div className={`group bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors p-6 border-l-4 ${
+      fixture.is_home_game ? 'border-l-gfc-lime' : 'border-l-transparent'
+    }`}>
       <div className="flex flex-wrap md:flex-nowrap items-center gap-4">
 
         {/* Date + competition */}
@@ -50,7 +40,7 @@ function FixtureRow({ fixture }) {
 
         {/* Teams + score */}
         <div className="flex-1 flex items-center gap-4">
-          <p className={`flex-1 text-right font-bold text-sm leading-snug ${
+          <p className={`flex-1 text-right font-bold text-lg leading-snug ${
             fixture.is_home_game ? 'text-gray-900' : 'text-gray-400'
           }`}>
             {fixture.home_team_name}
@@ -68,12 +58,12 @@ function FixtureRow({ fixture }) {
               )}
             </div>
           ) : (
-            <span className="bg-gfc-lime text-gfc-900 font-black text-xs px-4 py-2 uppercase tracking-widest flex-shrink-0">
+            <span className="bg-gfc-lime text-gfc-900 font-black text-sm px-6 py-3 uppercase tracking-widest flex-shrink-0 animate-pulse">
               VS
             </span>
           )}
 
-          <p className={`flex-1 font-bold text-sm leading-snug ${
+          <p className={`flex-1 font-bold text-lg leading-snug ${
             !fixture.is_home_game ? 'text-gray-900' : 'text-gray-400'
           }`}>
             {fixture.away_team_name}
@@ -101,7 +91,10 @@ export default function Fixtures() {
   const { teamType } = useParams()
   const { pathname } = useLocation()
   const isResults = pathname.endsWith('/results')
-  const teamLabel = TEAM_LABELS[teamType] ?? teamType
+
+  // Served from React Query cache — no extra network request if Squad was visited first
+  const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: getTeams })
+  const team = teams?.find(t => t.slug === teamType)
 
   const { data: fixtures, isLoading, isError } = useQuery({
     queryKey: ['fixtures', teamType, isResults],
@@ -109,10 +102,16 @@ export default function Fixtures() {
   })
 
   if (isLoading) return (
-    <div className="min-h-screen bg-gfc-900 flex items-center justify-center">
-      <div className="text-center">
-        <div className="text-gfc-lime font-black text-3xl animate-pulse mb-2">GFC</div>
-        <p className="text-gray-500 text-sm uppercase tracking-widest">Loading...</p>
+    <div className="min-h-screen bg-white">
+      <div className="bg-gfc-900 pt-20 pb-16 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="h-3 w-28 bg-gfc-700/50 animate-pulse rounded mb-5" />
+          <div className="h-14 w-48 bg-gfc-800 animate-pulse rounded" />
+        </div>
+      </div>
+      <div className="h-1 bg-gfc-lime" />
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <FixtureSkeleton count={5} />
       </div>
     </div>
   )
@@ -135,13 +134,13 @@ export default function Fixtures() {
   return (
     <div>
       <SEO
-        title="Fixtures & Results"
-        description="Upcoming fixtures and latest results for Hillyfielders Gorkha FC teams."
+        title={`${team?.name ?? 'Team'} ${isResults ? 'Results' : 'Fixtures'}`}
+        description={`${isResults ? 'Latest results' : 'Upcoming fixtures'} for ${team?.programme_name ?? 'Hillyfielders Gorkha FC'} ${team?.name ?? ''}.`}
       />
       {/* Header (dark) */}
       <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
         <div className="max-w-7xl mx-auto">
-          <p className="eyebrow mb-5">{teamLabel}</p>
+          <p className="eyebrow mb-5">{team ? `${team.programme_name} — ${team.name}` : 'Hillyfielders Gorkha FC'}</p>
           <h1 className="font-black uppercase leading-none" style={{ fontSize: 'clamp(48px, 8vw, 88px)' }}>
             {isResults ? 'Results' : 'Fixtures'}
           </h1>
@@ -150,23 +149,30 @@ export default function Fixtures() {
 
       <TeamPageTabs teamType={teamType} />
 
+      {/* Lime divider */}
+      <div className="h-1 bg-gfc-lime" />
+
       {/* Content (white) */}
       <div className="bg-white min-h-screen">
         <div className="max-w-7xl mx-auto px-6 py-12">
           {!fixtures?.length ? (
-            <div className="text-center py-24 border border-gray-100 bg-gray-50">
-              <p className="text-gfc-700/20 font-black text-5xl mb-4" style={{ fontFamily: 'Oswald, sans-serif' }}>GFC</p>
-              <p className="text-gray-900 font-black uppercase text-xl mb-2">
-                No {isResults ? 'Results' : 'Fixtures'} Yet
-              </p>
-              <p className="text-gray-400 text-sm">Add them in the Django admin.</p>
+            <div className="text-center py-24 border border-gray-100 bg-gray-50 relative overflow-hidden">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <img src="/logo.png" alt="" className="w-48 h-48 object-contain opacity-[0.04]" onError={e => e.target.style.display = 'none'} />
+              </div>
+              <div className="relative z-10">
+                <p className="text-gfc-lime text-[10px] font-black uppercase tracking-widest mb-4">Hillyfielders Gorkha FC</p>
+                <p className="text-gray-900 font-black uppercase text-2xl mb-2" style={{ fontFamily: 'Oswald, sans-serif' }}>
+                  No {isResults ? 'Results' : 'Fixtures'} Scheduled
+                </p>
+                <p className="text-gray-400 text-sm">Check back soon — fixtures will be announced here.</p>
+              </div>
             </div>
           ) : (
             Object.entries(grouped).map(([month, monthFixtures]) => (
               <div key={month} className="mb-12">
-                <div className="flex items-center gap-5 mb-5">
-                  <h2 className="text-gray-900 font-black uppercase text-lg">{month}</h2>
-                  <div className="flex-1 h-px bg-gray-200" />
+                <div className="mb-5 pb-3 border-b-2 border-gfc-lime">
+                  <h2 className="text-gray-900 font-black uppercase text-2xl">{month}</h2>
                 </div>
                 <div className="border border-gray-200">
                   {monthFixtures.map(f => <FixtureRow key={f.id} fixture={f} />)}

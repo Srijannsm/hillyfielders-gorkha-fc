@@ -3,19 +3,7 @@ import { useParams } from 'react-router-dom'
 import { getTeams } from '../services/api'
 import TeamPageTabs from '../components/TeamPageTabs'
 import SEO from '../components/SEO'
-
-const TEAM_LABELS = {
-  'mens-senior':   { name: "Men's Senior Team",   programme: "Men's Programme" },
-  'mens-u16':      { name: "Men's U-16",          programme: "Men's Programme" },
-  'mens-u14':      { name: "Men's U-14",          programme: "Men's Programme" },
-  'mens-u12':      { name: "Men's U-12",          programme: "Men's Programme" },
-  'womens-senior': { name: "Women's Senior Team", programme: "Women's Programme" },
-  'womens-u16':    { name: "Women's U-16",        programme: "Women's Programme" },
-  'womens-u14':    { name: "Women's U-14",        programme: "Women's Programme" },
-  'womens-u12':    { name: "Women's U-12",        programme: "Women's Programme" },
-  'mens':          { name: "Men's First Team",    programme: "Men's Programme" },
-  'womens':        { name: "Women's First Team",  programme: "Women's Programme" },
-}
+import PlayerCardSkeleton from '../components/skeletons/PlayerCardSkeleton'
 
 const POSITION_ORDER  = ['GK', 'DEF', 'MID', 'FWD']
 const POSITION_LABELS = { GK: 'Goalkeepers', DEF: 'Defenders', MID: 'Midfielders', FWD: 'Forwards' }
@@ -25,7 +13,7 @@ function PlayerCard({ player }) {
   return (
     <div className="group bg-gfc-900 overflow-hidden border border-gfc-700 hover:border-gfc-lime transition-colors">
       {/* Photo */}
-      <div className="aspect-[3/4] relative overflow-hidden bg-gfc-700">
+      <div className="h-72 w-full relative overflow-hidden bg-gfc-800">
         {player.photo ? (
           <img
             src={player.photo}
@@ -33,19 +21,32 @@ function PlayerCard({ player }) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span
-              className="font-black text-gfc-lime/10 select-none"
-              style={{ fontSize: '96px', lineHeight: 1 }}
-            >
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gfc-800">
+            <svg viewBox="0 0 80 100" className="w-16 h-20" fill="currentColor" style={{ color: 'rgba(190,255,0,0.1)' }}>
+              <circle cx="40" cy="28" r="18" />
+              <path d="M5 98 C5 62 18 52 40 52 C62 52 75 62 75 98 Z" />
+            </svg>
+            <span className="font-black" style={{ fontSize: '28px', color: 'rgba(190,255,0,0.12)' }}>
               {player.jersey_number}
             </span>
           </div>
         )}
         {/* Bottom gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-gfc-900 via-transparent to-transparent" />
-        {/* Jersey badge */}
-        <div className="absolute top-0 left-0 bg-gfc-lime text-gfc-900 font-black text-xs w-9 h-9 flex items-center justify-center">
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-gfc-900/85 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-5 z-20">
+          <p className="text-white font-black uppercase text-center text-sm leading-tight mb-2">
+            {player.name}
+          </p>
+          <p className="text-gfc-lime text-[10px] font-black uppercase tracking-widest">
+            {player.position_display}
+          </p>
+          {player.nationality && (
+            <p className="text-gray-400 text-xs mt-1.5">{player.nationality}</p>
+          )}
+        </div>
+        {/* Jersey badge — bottom left */}
+        <div className="absolute bottom-4 left-4 bg-gfc-lime text-gfc-900 font-black text-base w-10 h-10 flex items-center justify-center z-10">
           {player.jersey_number}
         </div>
       </div>
@@ -94,7 +95,7 @@ function PositionSection({ label, count, children }) {
   return (
     <div className="mb-16">
       <div className="flex items-center gap-5 mb-8">
-        <h2 className="text-gray-900 font-black uppercase text-2xl">{label}</h2>
+        <h2 className="text-gray-900 font-black uppercase text-3xl border-l-4 border-gfc-lime pl-4">{label}</h2>
         <span className="bg-gfc-lime text-gfc-900 font-black text-xs px-3 py-1 uppercase tracking-wide">
           {count}
         </span>
@@ -108,7 +109,6 @@ function PositionSection({ label, count, children }) {
 /* ══════════════════════════════════════════════════════════ */
 export default function Squad() {
   const { teamType } = useParams()
-  const teamInfo = TEAM_LABELS[teamType] ?? { name: 'Squad', programme: 'The Club' }
 
   const { data: teams, isLoading, isError } = useQuery({
     queryKey: ['teams'],
@@ -116,10 +116,16 @@ export default function Squad() {
   })
 
   if (isLoading) return (
-    <div className="min-h-screen bg-gfc-900 flex items-center justify-center">
-      <div className="text-center">
-        <div className="text-gfc-lime font-black text-3xl animate-pulse mb-2">GFC</div>
-        <p className="text-gray-500 text-sm uppercase tracking-widest">Loading squad...</p>
+    <div className="min-h-screen bg-white">
+      <div className="bg-gfc-900 pt-20 pb-16 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="h-3 w-36 bg-gfc-700/50 animate-pulse rounded mb-5" />
+          <div className="h-14 w-72 bg-gfc-800 animate-pulse rounded" />
+        </div>
+      </div>
+      <div className="h-1 bg-gfc-lime" />
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        <PlayerCardSkeleton count={8} />
       </div>
     </div>
   )
@@ -130,15 +136,15 @@ export default function Squad() {
     </div>
   )
 
-  const team = teams?.find(t => t.team_type === teamType)
+  const team = teams?.find(t => t.slug === teamType)
 
   if (!team) return (
     <div>
       <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
         <div className="max-w-7xl mx-auto">
-          <p className="eyebrow mb-5">{teamInfo.programme}</p>
+          <p className="eyebrow mb-5">Hillyfielders Gorkha FC</p>
           <h1 className="font-black uppercase" style={{ fontSize: 'clamp(48px, 8vw, 88px)', lineHeight: 1 }}>
-            {teamInfo.name}
+            Squad
           </h1>
         </div>
       </section>
@@ -164,16 +170,16 @@ export default function Squad() {
   return (
     <div>
       <SEO
-        title={TEAM_LABELS[teamType]?.name ?? 'Squad'}
-        description={`Meet the players of the ${TEAM_LABELS[teamType]?.name ?? 'Hillyfielders Gorkha FC'} squad.`}
+        title={team.name}
+        description={`Meet the players of the ${team.programme_name} ${team.name} squad.`}
       />
       {/* Header (dark) */}
       <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <p className="eyebrow mb-5">{teamInfo.programme}</p>
+            <p className="eyebrow mb-5">{team.programme_name}</p>
             <h1 className="font-black uppercase leading-none" style={{ fontSize: 'clamp(48px, 8vw, 88px)' }}>
-              {teamInfo.name}
+              {team.name}
             </h1>
           </div>
           <p className="text-gray-500 text-sm font-medium uppercase tracking-widest pb-1">
@@ -183,6 +189,9 @@ export default function Squad() {
       </section>
 
       <TeamPageTabs teamType={teamType} />
+
+      {/* Lime divider */}
+      <div className="h-1 bg-gfc-lime" />
 
       {/* Content (white) */}
       <div className="bg-white">
