@@ -95,7 +95,7 @@ export default function About() {
       />
 
       {/* ── SECTION 1: Page header ── */}
-      <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
+      <section className="section-bg bg-gfc-900 text-white pt-10 pb-10 px-6">
         <div className="max-w-7xl mx-auto">
           <p className="eyebrow mb-5">{club.tagline || 'Hillyfielders Gorkha FC'}</p>
           <h1 className="font-black uppercase leading-none" style={{ fontSize: 'clamp(48px, 8vw, 88px)' }}>
@@ -150,8 +150,8 @@ export default function About() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <PillarCard icon="⚽" heading="Our Mission" body={club.mission} number="01" />
-            <PillarCard icon="🏆" heading="Our Vision"  body={club.vision}   number="02" />
-            <PillarCard icon="🤝" heading="Our Values"  body={club.values}   number="03" />
+            <PillarCard icon="🏆" heading="Our Vision" body={club.vision} number="02" />
+            <PillarCard icon="🤝" heading="Our Values" body={club.values} number="03" />
           </div>
         </div>
       </section>
@@ -215,7 +215,7 @@ export default function About() {
               <div className="flex flex-col gap-5">
                 {[
                   { label: 'Location', value: `${club.district}, ${club.province}` },
-                  { label: 'Type',     value: '5-a-side turf' },
+                  { label: 'Type', value: '5-a-side turf' },
                   { label: 'Used for', value: 'Training, Academy sessions, U-16 matches' },
                 ].map(({ label, value }) => (
                   <div key={label} className="border-b border-gfc-700 pb-5 last:border-b-0 last:pb-0">

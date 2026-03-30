@@ -6,18 +6,18 @@ import GallerySkeleton from '../components/skeletons/GallerySkeleton'
 
 /* ── Category filter config ─────────────────────────────── */
 const TABS = [
-  { label: 'All',        value: '' },
-  { label: 'Training',   value: 'training' },
-  { label: 'Match Day',  value: 'matchday' },
-  { label: 'Academy',    value: 'academy' },
+  { label: 'All', value: '' },
+  { label: 'Training', value: 'training' },
+  { label: 'Match Day', value: 'matchday' },
+  { label: 'Academy', value: 'academy' },
   { label: 'Team Photo', value: 'team' },
 ]
 
 const BADGE_COLORS = {
   training: 'bg-blue-900/80 text-blue-200',
-  matchday:  'bg-gfc-700/80 text-gfc-lime',
-  academy:   'bg-purple-900/80 text-purple-200',
-  team:      'bg-gfc-800/80 text-white',
+  matchday: 'bg-gfc-700/80 text-gfc-lime',
+  academy: 'bg-purple-900/80 text-purple-200',
+  team: 'bg-gfc-800/80 text-white',
 }
 
 /* ── Lightbox ───────────────────────────────────────────── */
@@ -170,7 +170,7 @@ export default function Gallery() {
       />
 
       {/* ── Page header ── */}
-      <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
+      <section className="section-bg bg-gfc-900 text-white pt-10 pb-10 px-6">
         <div className="max-w-7xl mx-auto">
           <p className="eyebrow mb-5">Hillyfielders Gorkha FC</p>
           <h1 className="font-black uppercase leading-none text-white" style={{ fontSize: 'clamp(48px, 8vw, 88px)' }}>
@@ -192,19 +192,17 @@ export default function Gallery() {
                 <button
                   key={tab.value}
                   onClick={() => setActiveCategory(tab.value)}
-                  className={`flex-shrink-0 px-6 py-5 text-[11px] font-black uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
-                    activeCategory === tab.value
+                  className={`flex-shrink-0 px-6 py-5 text-[11px] font-black uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${activeCategory === tab.value
                       ? 'text-gfc-lime border-gfc-lime'
                       : 'text-gray-400 border-transparent hover:text-white hover:border-gfc-lime/40'
-                  }`}
+                    }`}
                 >
                   {tab.label}
                   {count != null && count > 0 && (
-                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-sm leading-none ${
-                      activeCategory === tab.value
+                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-sm leading-none ${activeCategory === tab.value
                         ? 'bg-gfc-lime text-gfc-900'
                         : 'bg-gfc-700 text-gray-400'
-                    }`}>
+                      }`}>
                       {count}
                     </span>
                   )}

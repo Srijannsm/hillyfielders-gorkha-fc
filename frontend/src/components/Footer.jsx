@@ -50,7 +50,7 @@ const SOCIAL_LINKS = [
 
 export default function Footer() {
   return (
-    <footer className="bg-gfc-900 border-t border-gfc-700">
+    <footer className="bg-gfc-900">
 
       {/* Main area */}
       <div className="max-w-7xl mx-auto px-6 py-14 flex flex-col items-center gap-10">

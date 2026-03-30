@@ -35,7 +35,7 @@ export default function Contact() {
         description="Get in touch with Hillyfielders Gorkha FC. Located at TOC Turf, Gorkha, Gandaki Pradesh, Nepal."
       />
       {/* Header (dark) */}
-      <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
+      <section className="section-bg bg-gfc-900 text-white pt-10 pb-10 px-6">
         <div className="max-w-7xl mx-auto">
           <p className="eyebrow mb-5">Get in Touch</p>
           <h1 className="font-black uppercase leading-none" style={{ fontSize: 'clamp(48px, 8vw, 88px)' }}>
@@ -98,13 +98,13 @@ export default function Contact() {
                 <p className="eyebrow-light mb-3">Follow Us</p>
                 <div className="flex gap-2">
                   {[
-                    { label: 'Facebook',  href: 'https://www.facebook.com/HillyFielders/' },
+                    { label: 'Facebook', href: 'https://www.facebook.com/HillyFielders/' },
                     { label: 'Instagram', href: '#' },
-                    { label: 'YouTube',   href: '#' },
-                    { label: 'WhatsApp',  href: 'https://wa.me/977XXXXXXXXXX' },
+                    { label: 'YouTube', href: '#' },
+                    { label: 'WhatsApp', href: 'https://wa.me/977XXXXXXXXXX' },
                   ].map(s => (
                     <a
-                      key={s.label} 
+                      key={s.label}
                       href={s.href}
                       target={s.href !== '#' ? '_blank' : undefined}
                       rel="noopener noreferrer"
@@ -152,11 +152,10 @@ export default function Contact() {
               <button
                 onClick={handleSubmit}
                 disabled={status === 'sending'}
-                className={`font-black text-xs uppercase tracking-widest py-4 transition-colors mt-1 ${
-                  status === 'sending'
+                className={`font-black text-xs uppercase tracking-widest py-4 transition-colors mt-1 ${status === 'sending'
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-gfc-700 text-gfc-lime hover:bg-gfc-900 cursor-pointer'
-                }`}
+                  }`}
               >
                 {status === 'sending' ? 'Sending...' : 'Send Message'}
               </button>

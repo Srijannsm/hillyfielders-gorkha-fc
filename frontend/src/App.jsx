@@ -1,6 +1,7 @@
-import { Routes, Route, Link } from 'react-router-dom'
+import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import PageTransition from './components/PageTransition'
 import Home from './pages/Home'
 import Squad from './pages/Squad'
 import Fixtures from './pages/Fixtures'
@@ -35,10 +36,13 @@ function ComingSoon({ page }) {
 }
 
 export default function App() {
+  const location = useLocation()
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1">
+        <PageTransition key={location.pathname}>
         <Routes>
           <Route path="/" element={<Home />} />
 
@@ -64,6 +68,7 @@ export default function App() {
           <Route path="/mens" element={<ComingSoon page="Men's Programme" />} />
           <Route path="/womens" element={<ComingSoon page="Women's Programme" />} />
         </Routes>
+        </PageTransition>
       </main>
       <Footer />
       <WhatsAppButton />

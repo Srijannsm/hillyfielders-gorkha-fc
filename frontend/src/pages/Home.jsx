@@ -1,6 +1,7 @@
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { getNews, getFixtures, getSponsors, getProgrammes } from '../services/api'
+import { getNews, getFixtures, getSponsors, getProgrammes, getGallery } from '../services/api'
 import SEO from '../components/SEO'
 
 const MENS_SLUG = 'mens-senior'
@@ -42,29 +43,18 @@ function NewsCard({ article, featured = false }) {
   )
 }
 
-/* ── Single programme fixture column ───────────────────── */
+/* ── Fixture column ─────────────────────────────────────── */
 function FixtureColumn({ label, slug, fixture, isLoading }) {
-  // Detect GFC's side by club name — more reliable than the is_home_game flag
-  const gfcPattern = /hillyfielders|gorkha\s*fc/i
-  const gfcIsHome = fixture
-    ? gfcPattern.test(fixture.home_team_name)
-    : true
-
   return (
     <div className="flex-1 px-8 py-8 flex flex-col gap-5">
-      {/* Programme label */}
       <div className="flex items-center gap-3">
         <span className="w-1 h-5 bg-gfc-lime flex-shrink-0" />
         <p className="text-gfc-lime text-[10px] font-black uppercase tracking-widest">{label}</p>
       </div>
-
       {isLoading ? (
         <p className="text-gray-600 text-xs uppercase tracking-widest animate-pulse">Loading...</p>
       ) : fixture ? (
         <>
-          {/* Squad badge — centered above the matchup */}
-
-          {/* Teams + VS */}
           <div className="flex items-center gap-3">
             <p className="text-white font-black uppercase text-sm md:text-base flex-1 text-right leading-tight">
               {fixture.home_team_name}
@@ -76,28 +66,17 @@ function FixtureColumn({ label, slug, fixture, isLoading }) {
               {fixture.away_team_name}
             </p>
           </div>
-
-          {/* Meta */}
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-xs">
-                {new Date(fixture.date).toLocaleDateString('en-GB', {
-                  weekday: 'short', day: 'numeric', month: 'short',
-                })}
+                {new Date(fixture.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
                 {' · '}
                 {new Date(fixture.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
               </p>
-              {fixture.venue && (
-                <p className="text-gray-600 text-xs mt-0.5">{fixture.venue}</p>
-              )}
-              <p className="text-gray-600 text-[10px] mt-0.5 uppercase tracking-wide">
-                {fixture.competition_name || 'Friendly'}
-              </p>
+              {fixture.venue && <p className="text-gray-600 text-xs mt-0.5">{fixture.venue}</p>}
+              <p className="text-gray-600 text-[10px] mt-0.5 uppercase tracking-wide">{fixture.competition_name || 'Friendly'}</p>
             </div>
-            <Link
-              to={`/${slug}/fixtures`}
-              className="text-gfc-lime text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1.5 flex-shrink-0"
-            >
+            <Link to={`/${slug}/fixtures`} className="text-gfc-lime text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1.5 flex-shrink-0">
               All Fixtures <span>→</span>
             </Link>
           </div>
@@ -105,10 +84,7 @@ function FixtureColumn({ label, slug, fixture, isLoading }) {
       ) : (
         <div className="flex items-center justify-between">
           <p className="text-gray-600 text-xs uppercase tracking-widest">No upcoming fixtures</p>
-          <Link
-            to={`/${slug}/fixtures`}
-            className="text-gfc-lime text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1.5"
-          >
+          <Link to={`/${slug}/fixtures`} className="text-gfc-lime text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1.5">
             Fixtures <span>→</span>
           </Link>
         </div>
@@ -117,24 +93,13 @@ function FixtureColumn({ label, slug, fixture, isLoading }) {
   )
 }
 
-/* ── Two-column fixtures band ──────────────────────────── */
 function FixturesBand({ mensFixtures, womensFixtures, mensLoading, womensLoading }) {
   return (
     <section className="bg-gfc-900 border-y border-gfc-700">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-gfc-700">
-          <FixtureColumn
-            label="Men's Programme"
-            slug={MENS_SLUG}
-            fixture={mensFixtures?.[0] ?? null}
-            isLoading={mensLoading}
-          />
-          <FixtureColumn
-            label="Women's Programme"
-            slug={WOMENS_SLUG}
-            fixture={womensFixtures?.[0] ?? null}
-            isLoading={womensLoading}
-          />
+          <FixtureColumn label="Men's Programme" slug={MENS_SLUG} fixture={mensFixtures?.[0] ?? null} isLoading={mensLoading} />
+          <FixtureColumn label="Women's Programme" slug={WOMENS_SLUG} fixture={womensFixtures?.[0] ?? null} isLoading={womensLoading} />
         </div>
       </div>
     </section>
@@ -153,28 +118,160 @@ function Stat({ number, label }) {
   )
 }
 
-/* ── Programme card (on white bg) ─────────────────────── */
-function ProgrammeCard({ programme, name, to, description }) {
+/* ── Programme card ────────────────────────────────────── */
+function ProgrammeCard({ programme, name, to, description, index }) {
   return (
     <Link to={to} className="block group">
-      <div className="flex flex-col h-[280px] p-7 border-t-2 border-t-gfc-lime bg-gfc-900 hover:bg-gfc-800 transition-colors overflow-hidden">
-        <p className="text-gfc-lime/60 text-[9px] font-black uppercase tracking-widest mb-3">
-          {programme}
-        </p>
-        <h3 className="text-white font-black uppercase leading-tight mb-3"
-          style={{ fontFamily: 'Oswald, sans-serif', fontSize: 'clamp(22px, 2.5vw, 28px)' }}>
-          {name}
-        </h3>
-        {description && (
-          <p className="text-gray-400 text-xs leading-relaxed flex-1">{description}</p>
-        )}
-        <div className="mt-5">
-          <span className="text-gfc-lime text-[10px] font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform inline-block">
-            View Squad →
-          </span>
+      <div className="relative flex flex-col border border-gray-200 bg-white hover:border-gfc-500 hover:shadow-xl transition-all duration-300 overflow-hidden h-full">
+        {/* Top lime accent bar */}
+        <div className="h-[3px] bg-gfc-lime" />
+
+        <div className="p-6 flex flex-col flex-1">
+          {/* Programme label */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className="w-1.5 h-1.5 bg-gfc-lime rounded-full flex-shrink-0" />
+            <p className="text-gfc-500 text-[9px] font-black uppercase tracking-widest">{programme}</p>
+          </div>
+
+          {/* Large watermark number */}
+          <p className="text-gray-100 font-black select-none leading-none mb-1" style={{ fontFamily: 'Oswald, sans-serif', fontSize: '72px' }}>
+            {String(index + 1).padStart(2, '0')}
+          </p>
+
+          {/* Team name */}
+          <h3 className="text-gray-900 font-black uppercase leading-tight mb-3" style={{ fontFamily: 'Oswald, sans-serif', fontSize: 'clamp(20px, 2vw, 26px)' }}>
+            {name}
+          </h3>
+
+          {/* Description */}
+          {description && (
+            <p className="text-gray-400 text-xs leading-relaxed flex-1">{description}</p>
+          )}
+
+          {/* Footer row */}
+          <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-100">
+            <span className="text-gfc-500 text-[10px] font-black uppercase tracking-widest group-hover:text-gfc-900 transition-colors">
+              View Squad
+            </span>
+            <div className="w-7 h-7 bg-gray-100 group-hover:bg-gfc-lime transition-colors duration-300 flex items-center justify-center flex-shrink-0">
+              <svg className="w-3 h-3 text-gray-400 group-hover:text-gfc-900 transition-colors" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
     </Link>
+  )
+}
+
+/* ── Gallery lightbox (homepage) ───────────────────────── */
+function PhotoLightbox({ photo, onClose }) {
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handler)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', handler)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={onClose}>
+      <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <button
+          onClick={onClose}
+          className="absolute -top-10 right-0 text-white/70 hover:text-gfc-lime transition-colors text-[10px] font-black uppercase tracking-widest flex items-center gap-2"
+        >
+          Close <span className="text-base leading-none">✕</span>
+        </button>
+        <div className="flex-1 overflow-hidden flex items-center justify-center bg-gfc-900">
+          <img src={photo.image} alt={photo.title} className="max-h-[75vh] max-w-full object-contain" />
+        </div>
+        <div className="bg-gfc-900 border-t border-gfc-700 px-5 py-4">
+          <p className="text-white font-black uppercase text-sm" style={{ fontFamily: 'Oswald, sans-serif' }}>{photo.title}</p>
+          {photo.caption && <p className="text-gray-400 text-xs mt-1">{photo.caption}</p>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Gallery glimpse (3×3 Instagram grid) ──────────────── */
+function GalleryGlimpse({ photos }) {
+  const [lightboxPhoto, setLightboxPhoto] = useState(null)
+
+  if (!photos?.length) return null
+
+  const gridPhotos = photos.slice(0, 9)
+
+  return (
+    <section className="bg-gfc-900 py-20 px-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex items-end justify-between mb-10">
+          <div>
+            <p className="eyebrow mb-4">Behind the Scenes</p>
+            <h2 className="text-white font-black uppercase" style={{ fontSize: 'clamp(32px, 4.5vw, 52px)' }}>
+              Gallery
+            </h2>
+          </div>
+          <Link
+            to="/gallery"
+            className="text-gfc-lime text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors flex items-center gap-2 flex-shrink-0"
+          >
+            View All <span>→</span>
+          </Link>
+        </div>
+
+        {/* 3×3 Instagram-style grid */}
+        <div className="grid grid-cols-3 gap-1 md:gap-[3px]">
+          {gridPhotos.map((photo) => (
+            <div
+              key={photo.id}
+              className="relative overflow-hidden bg-gfc-800 cursor-pointer group"
+              style={{ aspectRatio: '1 / 1' }}
+              onClick={() => setLightboxPhoto(photo)}
+            >
+              <img
+                src={photo.image}
+                alt={photo.title}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                loading="lazy"
+              />
+              {/* Hover overlay */}
+              <div className="absolute inset-0 bg-gfc-900/0 group-hover:bg-gfc-900/70 transition-colors duration-300 flex flex-col items-center justify-center gap-2 p-3">
+                <div className="w-9 h-9 bg-gfc-lime scale-0 group-hover:scale-100 transition-transform duration-300 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-gfc-900" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 3h6m0 0v6m0-6L14 10M9 21H3m0 0v-6m0 6l7-7" />
+                  </svg>
+                </div>
+                <p className="text-white text-[10px] font-black uppercase tracking-wider text-center leading-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300 line-clamp-2 hidden sm:block">
+                  {photo.title}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA row */}
+        <div className="mt-6 flex items-center justify-center gap-4">
+          <div className="flex-1 h-px bg-gfc-700" />
+          <Link
+            to="/gallery"
+            className="bg-gfc-lime text-gfc-900 font-black px-8 py-3 text-[10px] uppercase tracking-widest hover:bg-white transition-colors flex-shrink-0"
+          >
+            See Full Gallery
+          </Link>
+          <div className="flex-1 h-px bg-gfc-700" />
+        </div>
+      </div>
+
+      {lightboxPhoto && (
+        <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
+      )}
+    </section>
   )
 }
 
@@ -191,6 +288,7 @@ export default function Home() {
     queryFn: () => getFixtures(WOMENS_SLUG, false),
   })
   const { data: sponsors } = useQuery({ queryKey: ['sponsors'], queryFn: getSponsors })
+  const { data: galleryPhotos } = useQuery({ queryKey: ['gallery-home'], queryFn: () => getGallery('') })
 
   return (
     <div>
@@ -199,7 +297,7 @@ export default function Home() {
         description="Official website of Hillyfielders Gorkha FC — grassroots football from the heart of Gorkha, Nepal. U-16 Girls team, Academy programme and senior teams coming soon."
       />
 
-      {/* ── HERO (dark) ──────────────────────────────────── */}
+      {/* ── HERO ────────────────────────────────────────── */}
       <section className="hero-bg min-h-screen flex flex-col justify-end relative overflow-hidden">
         <div className="absolute right-0 top-0 bottom-0 w-1/2 flex items-center justify-end pr-8 pointer-events-none hidden lg:flex">
           <img src="/logo.png" alt="" className="w-[480px] h-[480px] object-contain opacity-[0.6]" onError={e => e.target.style.display = 'none'} />
@@ -225,8 +323,7 @@ export default function Home() {
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-gfc-900/60 to-transparent pointer-events-none" />
       </section>
 
-
-      {/* ── FIXTURES (dark, two columns) ─────────────────── */}
+      {/* ── FIXTURES ────────────────────────────────────── */}
       <FixturesBand
         mensFixtures={mensFixtures}
         womensFixtures={womensFixtures}
@@ -234,7 +331,7 @@ export default function Home() {
         womensLoading={womensLoading}
       />
 
-      {/* ── STATS STRIP (lime) ───────────────────────────── */}
+      {/* ── STATS STRIP ─────────────────────────────────── */}
       <section className="bg-gfc-lime">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4">
           <Stat number="2024" label="Year Founded" />
@@ -244,7 +341,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── LATEST NEWS (white) ──────────────────────────── */}
+      {/* ── LATEST NEWS ─────────────────────────────────── */}
       <section className="bg-white py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-end justify-between mb-10">
@@ -258,7 +355,6 @@ export default function Home() {
               All News <span>→</span>
             </Link>
           </div>
-
           {news?.length >= 3 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-2"><NewsCard article={news[0]} featured /></div>
@@ -281,80 +377,81 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── OUR PROGRAMMES (white/light) ─────────────────── */}
+      {/* ── OUR PROGRAMMES ──────────────────────────────── */}
       {programmes.some(p => p.teams.length > 0) && (
         <section className="bg-gray-50 py-20 px-6 border-t border-gray-100">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-12">
-              <p className="eyebrow-light mb-4">The Club</p>
-              <h2 className="text-gray-900 font-black uppercase" style={{ fontSize: 'clamp(36px, 5vw, 56px)' }}>
-                Our Programmes
-              </h2>
+            {/* Section header */}
+            <div className="flex items-end justify-between mb-12">
+              <div>
+                <p className="eyebrow-light mb-4">The Club</p>
+                <h2 className="text-gray-900 font-black uppercase" style={{ fontSize: 'clamp(36px, 5vw, 56px)' }}>
+                  Our Programmes
+                </h2>
+              </div>
+              <p className="text-gray-300 text-[10px] font-black uppercase tracking-widest hidden md:block">
+                {programmes.reduce((n, p) => n + p.teams.length, 0)} Active {programmes.reduce((n, p) => n + p.teams.length, 0) === 1 ? 'Team' : 'Teams'}
+              </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {programmes.flatMap(programme =>
-                programme.teams.map(team => (
+
+            {/* Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {programmes
+                .flatMap(programme =>
+                  programme.teams.map(team => ({ ...team, programmeName: programme.name }))
+                )
+                .map((team, i) => (
                   <ProgrammeCard
                     key={team.slug}
-                    programme={programme.name}
+                    programme={team.programmeName}
                     name={team.name}
                     to={`/${team.slug}/squad`}
                     description={team.description}
+                    index={i}
                   />
                 ))
-              )}
+              }
             </div>
           </div>
         </section>
       )}
+      {/* ── HOME GROUND (minimal strip) ─────────────────── */}
+      <section className="bg-gfc-800 border-y border-gfc-700 py-8 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+          {/* Left: label + name */}
+          <div className="flex items-center gap-4 sm:gap-6">
+            <p className="eyebrow">Our Ground</p>
+            <span className="w-px h-6 bg-gfc-700 hidden sm:block flex-shrink-0" />
+            <p className="text-white font-black uppercase" style={{ fontFamily: 'Oswald, sans-serif', fontSize: '26px' }}>
+              TOC TURF
+            </p>
+            <p className="text-gray-500 text-sm hidden md:block">Gorkha, Nepal</p>
+          </div>
 
-      {/* ── HOME GROUND (dark) ───────────────────────────── */}
-      <section className="bg-gfc-900 py-20 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div>
-            <p className="eyebrow mb-5">Our Stadium</p>
-            <h2 className="text-white font-black uppercase leading-tight mb-5" style={{ fontSize: 'clamp(32px, 4vw, 52px)' }}>
-              TOC Turf,<br />Gorkha
-            </h2>
-            <p className="text-gray-500 leading-relaxed mb-6 max-w-md">
-              Hillyfielders Gorkha FC calls TOC Turf home — a 5-a-side turf in the heart of Gorkha district.
-              This is where our academy sessions run, our U-16 girls train, and where the future of
-              Gorkha football is being built.
-            </p>
-            <p className="text-gfc-lime text-xs font-black uppercase tracking-widest flex items-center gap-3">
-              <span className="w-5 h-px bg-gfc-lime" />
-              Gorkha, Gandaki Pradesh, Nepal
-            </p>
-          </div>
-          <div className="border border-gfc-700 bg-gfc-800 relative overflow-hidden min-h-[280px] flex flex-col">
-            {/* Pitch markings */}
-            <div className="absolute inset-6 border border-gfc-700/20" />
-            <div className="absolute left-1/2 top-6 bottom-6 w-px bg-gfc-700/20 -translate-x-1/2" />
-            <div className="absolute left-1/2 top-1/2 w-24 h-24 border border-gfc-700/20 rounded-full -translate-x-1/2 -translate-y-1/2" />
-            {/* Content */}
-            <div className="relative z-10 p-8 flex flex-col justify-between flex-1">
-              <p className="text-gfc-lime text-[10px] font-black uppercase tracking-widest">Home Ground</p>
-              <div>
-                <p className="text-white font-black uppercase leading-none" style={{ fontFamily: 'Oswald, sans-serif', fontSize: '48px' }}>
-                  TOC TURF
-                </p>
-                <p className="text-gray-500 text-sm mt-2">Gorkha, Nepal</p>
+          {/* Middle: facts */}
+          <div className="flex items-center gap-5">
+            {['5-a-side turf', 'Training ground', 'Home of Hillyfielders'].map(item => (
+              <div key={item} className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-gfc-lime rounded-full flex-shrink-0" />
+                <span className="text-gray-500 text-[11px] uppercase tracking-wide hidden sm:block">{item}</span>
               </div>
-              <div className="flex flex-col gap-2">
-                {['5-a-side turf', 'Training ground', 'Home of Hillyfielders'].map(item => (
-                  <p key={item} className="text-gray-600 text-xs flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-gfc-lime rounded-full flex-shrink-0" />
-                    {item}
-                  </p>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
+
+          {/* Right: location */}
+          <p className="text-gfc-lime text-[10px] font-black uppercase tracking-widest flex items-center gap-2 flex-shrink-0">
+            <span className="w-4 h-px bg-gfc-lime" />
+            Gandaki Pradesh, Nepal
+          </p>
         </div>
       </section>
 
-      {/* ── SPONSORS STRIP (white) ───────────────────────── */}
-      {sponsors?.length > 0 && (
+      {/* ── GALLERY GLIMPSE ─────────────────────────────── */}
+      <GalleryGlimpse photos={galleryPhotos} />
+
+
+      {/* ── SPONSORS STRIP ──────────────────────────────── */}
+      {/* {sponsors?.length > 0 && (
         <section className="bg-white py-12 px-6 border-t border-gray-100">
           <div className="max-w-7xl mx-auto">
             <p className="text-gray-300 text-[10px] font-black uppercase tracking-widest text-center mb-8">Club Partners</p>
@@ -371,34 +468,47 @@ export default function Home() {
             </div>
           </div>
         </section>
-      )}
+      )} */}
 
-      {/* ── FOLLOW CTA (dark) ────────────────────────────── */}
-      <section className="bg-gfc-900 py-24 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <img src="/logo.png" alt="" className="w-[600px] h-[600px] object-contain opacity-[0.03]" onError={e => e.target.style.display = 'none'} />
+      {/* ── STAY CONNECTED (lime) ───────────────────────── */}
+      <section className="bg-gfc-lime py-24 px-6 relative overflow-hidden">
+        {/* Watermark */}
+        <div className="absolute right-0 top-0 bottom-0 flex items-center pointer-events-none select-none overflow-hidden">
+          <p className="text-gfc-900/[0.06] font-black uppercase leading-none pr-8" style={{ fontFamily: 'Oswald, sans-serif', fontSize: 'clamp(120px, 16vw, 200px)' }}>
+            GFC
+          </p>
         </div>
+
         <div className="max-w-2xl mx-auto text-center relative z-10">
-          <p className="eyebrow mb-6" style={{ display: 'flex', justifyContent: 'center' }}>Stay Connected</p>
-          <h2 className="text-white font-black uppercase leading-none mb-6" style={{ fontSize: 'clamp(48px, 7vw, 88px)' }}>
-            Follow the <span className="text-gfc-lime">Journey</span>
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <span className="w-8 h-0.5 bg-gfc-900/30" />
+            <p className="text-gfc-900/60 text-[11px] font-black uppercase tracking-widest">Stay Connected</p>
+            <span className="w-8 h-0.5 bg-gfc-900/30" />
+          </div>
+
+          <h2 className="text-gfc-900 font-black uppercase leading-none mb-6" style={{ fontSize: 'clamp(48px, 7vw, 88px)' }}>
+            Follow the Journey
           </h2>
-          <p className="text-gray-500 text-base leading-relaxed mb-10 max-w-lg mx-auto">
+          <p className="text-gfc-900/55 text-base leading-relaxed mb-10 max-w-lg mx-auto">
             From the hills of Gandaki Pradesh — follow Hillyfielders Gorkha FC for match updates, training photos, and club news.
           </p>
+
           <div className="flex gap-4 justify-center flex-wrap">
             <a
               href="https://www.facebook.com/HillyFielders/"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gfc-lime text-gfc-900 font-black px-8 py-4 text-xs uppercase tracking-widest hover:bg-white transition-colors flex items-center gap-3"
+              className="bg-gfc-900 text-gfc-lime font-black px-8 py-4 text-xs uppercase tracking-widest hover:bg-gfc-700 transition-colors flex items-center gap-3"
             >
               Follow on Facebook
-              <span className="bg-gfc-900/20 text-gfc-900 text-[9px] font-black px-2 py-0.5 tracking-normal normal-case rounded-full whitespace-nowrap">
+              <span className="bg-gfc-lime/10 text-gfc-lime text-[9px] font-black px-2 py-0.5 tracking-normal normal-case rounded-full whitespace-nowrap">
                 507+ followers
               </span>
             </a>
-            <Link to="/contact" className="border border-gfc-700 text-gray-300 font-bold px-8 py-4 text-xs uppercase tracking-widest hover:border-gfc-lime hover:text-gfc-lime transition-colors">
+            <Link
+              to="/contact"
+              className="border-2 border-gfc-900 text-gfc-900 font-bold px-8 py-4 text-xs uppercase tracking-widest hover:bg-gfc-900 hover:text-gfc-lime transition-colors"
+            >
               Get in Touch
             </Link>
           </div>

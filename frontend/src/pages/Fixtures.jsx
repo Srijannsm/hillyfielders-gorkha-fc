@@ -6,9 +6,9 @@ import SEO from '../components/SEO'
 import FixtureSkeleton from '../components/skeletons/FixtureSkeleton'
 
 const RESULT_STYLE = {
-  W: { bg: 'bg-green-500',  text: 'text-white', label: 'W' },
-  L: { bg: 'bg-red-600',    text: 'text-white', label: 'L' },
-  D: { bg: 'bg-gray-500',   text: 'text-white', label: 'D' },
+  W: { bg: 'bg-green-500', text: 'text-white', label: 'W' },
+  L: { bg: 'bg-red-600', text: 'text-white', label: 'L' },
+  D: { bg: 'bg-gray-500', text: 'text-white', label: 'D' },
 }
 
 /* ── Fixture row ───────────────────────────────────────── */
@@ -16,9 +16,8 @@ function FixtureRow({ fixture }) {
   const result = RESULT_STYLE[fixture.result]
 
   return (
-    <div className={`group bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors p-6 border-l-4 ${
-      fixture.is_home_game ? 'border-l-gfc-lime' : 'border-l-transparent'
-    }`}>
+    <div className={`group bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors p-6 border-l-4 ${fixture.is_home_game ? 'border-l-gfc-lime' : 'border-l-transparent'
+      }`}>
       <div className="flex flex-wrap md:flex-nowrap items-center gap-4">
 
         {/* Date + competition */}
@@ -40,9 +39,8 @@ function FixtureRow({ fixture }) {
 
         {/* Teams + score */}
         <div className="flex-1 flex items-center gap-4">
-          <p className={`flex-1 text-right font-bold text-lg leading-snug ${
-            fixture.is_home_game ? 'text-gray-900' : 'text-gray-400'
-          }`}>
+          <p className={`flex-1 text-right font-bold text-lg leading-snug ${fixture.is_home_game ? 'text-gray-900' : 'text-gray-400'
+            }`}>
             {fixture.home_team_name}
           </p>
 
@@ -63,9 +61,8 @@ function FixtureRow({ fixture }) {
             </span>
           )}
 
-          <p className={`flex-1 font-bold text-lg leading-snug ${
-            !fixture.is_home_game ? 'text-gray-900' : 'text-gray-400'
-          }`}>
+          <p className={`flex-1 font-bold text-lg leading-snug ${!fixture.is_home_game ? 'text-gray-900' : 'text-gray-400'
+            }`}>
             {fixture.away_team_name}
           </p>
         </div>
@@ -73,11 +70,10 @@ function FixtureRow({ fixture }) {
         {/* Venue + badge */}
         <div className="w-full md:w-44 flex-shrink-0 flex md:flex-col items-center md:items-end gap-3 md:gap-1">
           <p className="text-gray-500 text-xs">{fixture.venue || '—'}</p>
-          <span className={`text-[10px] font-black px-3 py-1 uppercase tracking-wider ${
-            fixture.is_home_game
+          <span className={`text-[10px] font-black px-3 py-1 uppercase tracking-wider ${fixture.is_home_game
               ? 'bg-gfc-lime text-gfc-900'
               : 'border border-gfc-500 text-gray-400'
-          }`}>
+            }`}>
             {fixture.is_home_game ? 'Home' : 'Away'}
           </span>
         </div>
@@ -103,7 +99,7 @@ export default function Fixtures() {
 
   if (isLoading) return (
     <div className="min-h-screen bg-white">
-      <div className="bg-gfc-900 pt-20 pb-16 px-6">
+      <div className="bg-gfc-900 pt-10 pb-10 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="h-3 w-28 bg-gfc-700/50 animate-pulse rounded mb-5" />
           <div className="h-14 w-48 bg-gfc-800 animate-pulse rounded" />
@@ -138,7 +134,7 @@ export default function Fixtures() {
         description={`${isResults ? 'Latest results' : 'Upcoming fixtures'} for ${team?.programme_name ?? 'Hillyfielders Gorkha FC'} ${team?.name ?? ''}.`}
       />
       {/* Header (dark) */}
-      <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
+      <section className="section-bg bg-gfc-900 text-white pt-10 pb-10 px-6">
         <div className="max-w-7xl mx-auto">
           <p className="eyebrow mb-5">{team ? `${team.programme_name} — ${team.name}` : 'Hillyfielders Gorkha FC'}</p>
           <h1 className="font-black uppercase leading-none" style={{ fontSize: 'clamp(48px, 8vw, 88px)' }}>

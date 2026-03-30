@@ -5,13 +5,13 @@ import TeamPageTabs from '../components/TeamPageTabs'
 import SEO from '../components/SEO'
 import PlayerCardSkeleton from '../components/skeletons/PlayerCardSkeleton'
 
-const POSITION_ORDER  = ['GK', 'DEF', 'MID', 'FWD']
+const POSITION_ORDER = ['GK', 'DEF', 'MID', 'FWD']
 const POSITION_LABELS = { GK: 'Goalkeepers', DEF: 'Defenders', MID: 'Midfielders', FWD: 'Forwards' }
 
 /* ── Player card ───────────────────────────────────────── */
 function PlayerCard({ player }) {
   return (
-    <div className="group bg-gfc-900 overflow-hidden border border-gfc-700 hover:border-gfc-lime transition-colors">
+    <div className="group bg-gfc-900 overflow-hidden border border-gfc-700 hover:border-gfc-lime hover:-translate-y-1 transition-all duration-200 ease-out">
       {/* Photo */}
       <div className="h-72 w-full relative overflow-hidden bg-gfc-800">
         {player.photo ? (
@@ -117,7 +117,7 @@ export default function Squad() {
 
   if (isLoading) return (
     <div className="min-h-screen bg-white">
-      <div className="bg-gfc-900 pt-20 pb-16 px-6">
+      <div className="bg-gfc-900 pt-10 pb-10 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="h-3 w-36 bg-gfc-700/50 animate-pulse rounded mb-5" />
           <div className="h-14 w-72 bg-gfc-800 animate-pulse rounded" />
@@ -140,7 +140,7 @@ export default function Squad() {
 
   if (!team) return (
     <div>
-      <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
+      <section className="section-bg bg-gfc-900 text-white pt-10 pb-10 px-6">
         <div className="max-w-7xl mx-auto">
           <p className="eyebrow mb-5">Hillyfielders Gorkha FC</p>
           <h1 className="font-black uppercase" style={{ fontSize: 'clamp(48px, 8vw, 88px)', lineHeight: 1 }}>
@@ -174,7 +174,7 @@ export default function Squad() {
         description={`Meet the players of the ${team.programme_name} ${team.name} squad.`}
       />
       {/* Header (dark) */}
-      <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
+      <section className="section-bg bg-gfc-900 text-white pt-10 pb-10 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <p className="eyebrow mb-5">{team.programme_name}</p>

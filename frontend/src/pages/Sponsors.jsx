@@ -56,7 +56,7 @@ export default function Sponsors() {
         description="Our valued sponsors and partners who support Hillyfielders Gorkha FC."
       />
       {/* Header (dark) */}
-      <section className="section-bg bg-gfc-900 text-white pt-20 pb-16 px-6">
+      <section className="section-bg bg-gfc-900 text-white pt-10 pb-10 px-6">
         <div className="max-w-7xl mx-auto">
           <p className="eyebrow mb-5">Our Partners</p>
           <h1 className="font-black uppercase leading-none" style={{ fontSize: 'clamp(48px, 8vw, 88px)' }}>
