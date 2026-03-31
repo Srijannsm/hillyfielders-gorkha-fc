@@ -1,9 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
 import { useParams, useLocation } from 'react-router-dom'
-import { getFixtures, getTeams } from '../services/api'
+import useFetch from '../hooks/useFetch'
 import TeamPageTabs from '../components/TeamPageTabs'
 import SEO from '../components/SEO'
 import FixtureSkeleton from '../components/skeletons/FixtureSkeleton'
+import ErrorMessage from '../components/errors/ErrorMessage'
+import InlineError from '../components/errors/InlineError'
 
 const RESULT_STYLE = {
   W: { bg: 'bg-green-500', text: 'text-white', label: 'W' },
@@ -88,16 +89,16 @@ export default function Fixtures() {
   const { pathname } = useLocation()
   const isResults = pathname.endsWith('/results')
 
-  // Served from React Query cache — no extra network request if Squad was visited first
-  const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: getTeams })
+  // Teams data is optional — only used for the page header.
+  // If it fails, fixtures still load (partial failure).
+  const { data: teams, error: teamsError, retry: retryTeams } = useFetch('/api/players/teams/')
   const team = teams?.find(t => t.slug === teamType)
 
-  const { data: fixtures, isLoading, isError } = useQuery({
-    queryKey: ['fixtures', teamType, isResults],
-    queryFn: () => getFixtures(teamType, isResults),
-  })
+  const { data: fixtures, loading, error, errorType, retry } = useFetch(
+    `/api/fixtures/?team=${teamType}&completed=${isResults}`
+  )
 
-  if (isLoading) return (
+  if (loading) return (
     <div className="min-h-screen bg-white">
       <div className="bg-gfc-900 pt-10 pb-10 px-6">
         <div className="max-w-7xl mx-auto">
@@ -112,10 +113,8 @@ export default function Fixtures() {
     </div>
   )
 
-  if (isError) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-red-400">Failed to load. Is Django running?</p>
-    </div>
+  if (error) return (
+    <ErrorMessage type={errorType} message={error} onRetry={retry} context="fixtures" />
   )
 
   const grouped = fixtures?.reduce((acc, f) => {
@@ -151,19 +150,19 @@ export default function Fixtures() {
       {/* Content (white) */}
       <div className="bg-white min-h-screen">
         <div className="max-w-7xl mx-auto px-6 py-12">
-          {!fixtures?.length ? (
-            <div className="text-center py-24 border border-gray-100 bg-gray-50 relative overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <img src="/logo.png" alt="" className="w-48 h-48 object-contain opacity-[0.04]" onError={e => e.target.style.display = 'none'} />
-              </div>
-              <div className="relative z-10">
-                <p className="text-gfc-lime text-[10px] font-black uppercase tracking-widest mb-4">Hillyfielders Gorkha FC</p>
-                <p className="text-gray-900 font-black uppercase text-2xl mb-2" style={{ fontFamily: 'Oswald, sans-serif' }}>
-                  No {isResults ? 'Results' : 'Fixtures'} Scheduled
-                </p>
-                <p className="text-gray-400 text-sm">Check back soon — fixtures will be announced here.</p>
-              </div>
+
+          {/* Partial failure — team header data failed but fixtures loaded */}
+          {teamsError && (
+            <div className="mb-6">
+              <InlineError
+                message="Could not load team info."
+                onRetry={retryTeams}
+              />
             </div>
+          )}
+
+          {!fixtures?.length ? (
+            <ErrorMessage type="empty" context="fixtures" />
           ) : (
             Object.entries(grouped).map(([month, monthFixtures]) => (
               <div key={month} className="mb-12">

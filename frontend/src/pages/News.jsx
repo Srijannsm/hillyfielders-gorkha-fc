@@ -1,8 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
-import { getNews, getArticle } from '../services/api'
+import useFetch from '../hooks/useFetch'
 import SEO from '../components/SEO'
 import NewsCardSkeleton from '../components/skeletons/NewsCardSkeleton'
+import ErrorMessage from '../components/errors/ErrorMessage'
+import LazyImage from '../components/LazyImage'
 
 /* ── Article card (dark image overlay) ────────────────── */
 function ArticleCard({ article, featured = false }) {
@@ -10,10 +11,12 @@ function ArticleCard({ article, featured = false }) {
     <Link to={`/news/${article.slug}`} className="group block h-full">
       <div className={`relative overflow-hidden bg-gfc-800 h-full ${featured ? 'min-h-[420px]' : 'min-h-[260px]'}`}>
         {article.cover_image ? (
-          <img
+          <LazyImage
             src={article.cover_image}
             alt={article.title}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-600 opacity-70"
+            fill
+            priority={featured}
+            className="group-hover:scale-105 transition-transform duration-500 opacity-70"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-gfc-800">
@@ -45,16 +48,7 @@ function ArticleCard({ article, featured = false }) {
 
 /* ── News list page ────────────────────────────────────── */
 export function NewsList() {
-  const { data: articles, isLoading, isError } = useQuery({
-    queryKey: ['news'],
-    queryFn: getNews,
-  })
-
-  if (isError) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-red-500 text-sm">Failed to load news.</p>
-    </div>
-  )
+  const { data: articles, loading, error, errorType, retry } = useFetch('/api/news/')
 
   return (
     <div>
@@ -78,14 +72,12 @@ export function NewsList() {
       {/* Article grid (white) */}
       <div className="bg-white">
         <div className="max-w-7xl mx-auto px-6 py-12">
-          {isLoading ? (
+          {loading ? (
             <NewsCardSkeleton count={6} />
+          ) : error ? (
+            <ErrorMessage type={errorType} message={error} onRetry={retry} context="news" />
           ) : !articles?.length ? (
-            <div className="text-center py-24 border border-gray-100 bg-gray-50">
-              <p className="text-gfc-700/20 font-black text-5xl mb-4" style={{ fontFamily: 'Oswald, sans-serif' }}>GFC</p>
-              <p className="text-gray-400 font-bold text-sm uppercase tracking-widest">No Articles Yet</p>
-              <p className="text-gray-300 text-sm mt-1">Check back soon for club updates.</p>
-            </div>
+            <ErrorMessage type="empty" context="news" />
           ) : (
             <>
               {/* Hero — first article full width */}
@@ -120,12 +112,9 @@ export function NewsList() {
 export function ArticleDetail() {
   const { slug } = useParams()
 
-  const { data: article, isLoading, isError } = useQuery({
-    queryKey: ['article', slug],
-    queryFn: () => getArticle(slug),
-  })
+  const { data: article, loading, error, errorType, retry } = useFetch(`/api/news/${slug}/`)
 
-  if (isLoading) return (
+  if (loading) return (
     <div className="min-h-screen bg-gfc-900 flex items-center justify-center">
       <div className="text-center">
         <div className="text-gfc-lime font-black text-3xl animate-pulse mb-2">GFC</div>
@@ -134,10 +123,8 @@ export function ArticleDetail() {
     </div>
   )
 
-  if (isError) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-red-500 text-sm">Article not found.</p>
-    </div>
+  if (error) return (
+    <ErrorMessage type={errorType} message={error} onRetry={retry} context="news" />
   )
 
   return (
@@ -145,7 +132,13 @@ export function ArticleDetail() {
       {/* Hero image */}
       {article.cover_image ? (
         <div className="w-full h-64 md:h-[480px] overflow-hidden relative bg-gfc-900">
-          <img src={article.cover_image} alt={article.title} className="w-full h-full object-cover opacity-75" />
+          <LazyImage
+            src={article.cover_image}
+            alt={article.title}
+            fill
+            priority
+            className="opacity-75"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         </div>
       ) : (

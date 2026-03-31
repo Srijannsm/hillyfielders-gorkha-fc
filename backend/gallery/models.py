@@ -50,16 +50,17 @@ class Photo(models.Model):
         super().save(*args, **kwargs)
 
     def _process_image(self):
-        """Convert to WebP, resize to ≤1200 px, store dimensions, make thumbnail."""
+        """Convert to WebP, resize to ≤1200px, store dimensions, make thumbnail."""
         img = Image.open(self.image)
 
-        # Normalise colour mode
-        if img.mode == 'RGBA':
+        # Normalise colour mode — WebP encoder needs RGB or RGBA
+        if img.mode not in ('RGB', 'RGBA'):
+            img = img.convert('RGB')
+        elif img.mode == 'RGBA':
+            # Flatten transparency onto white background for WebP (no alpha needed)
             bg = Image.new('RGB', img.size, (255, 255, 255))
             bg.paste(img, mask=img.split()[3])
             img = bg
-        elif img.mode != 'RGB':
-            img = img.convert('RGB')
 
         # Resize so longest side ≤ 1200 px
         w, h = img.size

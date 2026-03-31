@@ -1,24 +1,27 @@
-import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
-import { getTeams } from '../services/api'
+import useFetch from '../hooks/useFetch'
 import TeamPageTabs from '../components/TeamPageTabs'
 import SEO from '../components/SEO'
 import PlayerCardSkeleton from '../components/skeletons/PlayerCardSkeleton'
+import ErrorMessage from '../components/errors/ErrorMessage'
+import LazyImage from '../components/LazyImage'
 
 const POSITION_ORDER = ['GK', 'DEF', 'MID', 'FWD']
 const POSITION_LABELS = { GK: 'Goalkeepers', DEF: 'Defenders', MID: 'Midfielders', FWD: 'Forwards' }
 
 /* ── Player card ───────────────────────────────────────── */
-function PlayerCard({ player }) {
+function PlayerCard({ player, priority = false }) {
   return (
     <div className="group bg-gfc-900 overflow-hidden border border-gfc-700 hover:border-gfc-lime hover:-translate-y-1 transition-all duration-200 ease-out">
       {/* Photo */}
       <div className="h-72 w-full relative overflow-hidden bg-gfc-800">
         {player.photo ? (
-          <img
+          <LazyImage
             src={player.photo}
             alt={player.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            fill
+            priority={priority}
+            className="group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gfc-800">
@@ -110,12 +113,9 @@ function PositionSection({ label, count, children }) {
 export default function Squad() {
   const { teamType } = useParams()
 
-  const { data: teams, isLoading, isError } = useQuery({
-    queryKey: ['teams'],
-    queryFn: getTeams,
-  })
+  const { data: teams, loading, error, errorType, retry } = useFetch('/api/players/teams/')
 
-  if (isLoading) return (
+  if (loading) return (
     <div className="min-h-screen bg-white">
       <div className="bg-gfc-900 pt-10 pb-10 px-6">
         <div className="max-w-7xl mx-auto">
@@ -130,10 +130,8 @@ export default function Squad() {
     </div>
   )
 
-  if (isError) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-red-400 font-semibold">Failed to load squad. Is Django running?</p>
-    </div>
+  if (error) return (
+    <ErrorMessage type={errorType} message={error} onRetry={retry} context="squad" />
   )
 
   const team = teams?.find(t => t.slug === teamType)
@@ -210,21 +208,26 @@ export default function Squad() {
             </div>
           )}
 
-          {/* Players by position */}
-          {Object.entries(grouped).map(([pos, players]) => (
-            <PositionSection key={pos} label={POSITION_LABELS[pos]} count={players.length}>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                {players.map(p => <PlayerCard key={p.id} player={p} />)}
-              </div>
-            </PositionSection>
-          ))}
+          {/* Players by position — first 4 cards are priority (above fold) */}
+          {(() => {
+            let playerIdx = 0
+            return POSITION_ORDER
+              .filter(pos => grouped[pos])
+              .map(pos => (
+                <PositionSection key={pos} label={POSITION_LABELS[pos]} count={grouped[pos].length}>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                    {grouped[pos].map(p => {
+                      const isPriority = playerIdx < 4
+                      playerIdx++
+                      return <PlayerCard key={p.id} player={p} priority={isPriority} />
+                    })}
+                  </div>
+                </PositionSection>
+              ))
+          })()}
 
           {team.players.length === 0 && (
-            <div className="text-center py-24 border border-gray-100 bg-gray-50">
-              <p className="text-gfc-700/20 font-black text-5xl mb-4" style={{ fontFamily: 'Oswald, sans-serif' }}>GFC</p>
-              <p className="text-gray-900 font-black uppercase text-xl mb-2">No Players Added Yet</p>
-              <p className="text-gray-400 text-sm">Add players in the Django admin.</p>
-            </div>
+            <ErrorMessage type="empty" context="squad" />
           )}
         </div>
       </div>

@@ -1,105 +1,43 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { getGallery } from '../services/api'
+import { useState } from 'react'
+import useFetch from '../hooks/useFetch'
 import SEO from '../components/SEO'
 import GallerySkeleton from '../components/skeletons/GallerySkeleton'
+import ErrorMessage from '../components/errors/ErrorMessage'
+import LazyImage from '../components/LazyImage'
+import Lightbox from '../components/Lightbox'
 
 /* ── Category filter config ─────────────────────────────── */
 const TABS = [
-  { label: 'All', value: '' },
-  { label: 'Training', value: 'training' },
-  { label: 'Match Day', value: 'matchday' },
-  { label: 'Academy', value: 'academy' },
+  { label: 'All',        value: '' },
+  { label: 'Training',   value: 'training' },
+  { label: 'Match Day',  value: 'matchday' },
+  { label: 'Academy',    value: 'academy' },
   { label: 'Team Photo', value: 'team' },
 ]
 
 const BADGE_COLORS = {
   training: 'bg-blue-900/80 text-blue-200',
-  matchday: 'bg-gfc-700/80 text-gfc-lime',
-  academy: 'bg-purple-900/80 text-purple-200',
-  team: 'bg-gfc-800/80 text-white',
-}
-
-/* ── Lightbox ───────────────────────────────────────────── */
-function Lightbox({ photo, onClose }) {
-  // Close on Escape key
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', handler)
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', handler)
-      document.body.style.overflow = ''
-    }
-  }, [onClose])
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="relative max-w-5xl w-full max-h-[90vh] flex flex-col"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute -top-10 right-0 text-white/70 hover:text-gfc-lime transition-colors text-[10px] font-black uppercase tracking-widest flex items-center gap-2"
-        >
-          Close <span className="text-base leading-none">✕</span>
-        </button>
-
-        {/* Image */}
-        <div className="flex-1 overflow-hidden flex items-center justify-center bg-gfc-900">
-          <img
-            src={photo.image}
-            alt={photo.title}
-            className="max-h-[75vh] max-w-full object-contain"
-          />
-        </div>
-
-        {/* Caption bar */}
-        <div className="bg-gfc-900 border-t border-gfc-700 px-5 py-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-white font-black uppercase text-sm" style={{ fontFamily: 'Oswald, sans-serif' }}>
-                {photo.title}
-              </p>
-              {photo.caption && (
-                <p className="text-gray-400 text-xs mt-1 leading-relaxed">{photo.caption}</p>
-              )}
-            </div>
-            <span className={`flex-shrink-0 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-sm ${BADGE_COLORS[photo.category] || 'bg-gfc-700 text-white'}`}>
-              {photo.category_display}
-            </span>
-          </div>
-          {photo.date_taken && (
-            <p className="text-gray-600 text-[10px] uppercase tracking-widest mt-2 flex items-center gap-2">
-              <span className="w-3 h-px bg-gfc-lime inline-block" />
-              {new Date(photo.date_taken).toLocaleDateString('en-GB', {
-                day: 'numeric', month: 'long', year: 'numeric',
-              })}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  )
+  matchday:  'bg-gfc-700/80 text-gfc-lime',
+  academy:   'bg-purple-900/80 text-purple-200',
+  team:      'bg-gfc-800/80 text-white',
 }
 
 /* ── Photo card ─────────────────────────────────────────── */
-function PhotoCard({ photo, onClick }) {
+function PhotoCard({ photo, index, priority, onOpen }) {
   return (
     <div
-      className="relative group cursor-pointer overflow-hidden bg-gfc-800 mb-4 break-inside-avoid"
-      onClick={() => onClick(photo)}
+      className="relative group cursor-pointer overflow-hidden bg-gfc-800 mb-3 break-inside-avoid"
+      onClick={() => onOpen(index)}
     >
-      <img
+      {/* Lazy-loaded image with blur-up placeholder */}
+      <LazyImage
         src={photo.image}
-        alt={photo.title}
-        className="w-full block group-hover:scale-105 transition-transform duration-500"
-        loading="lazy"
+        thumbnail={photo.thumbnail}
+        width={photo.width}
+        height={photo.height}
+        alt={photo.alt || photo.title}
+        priority={priority}
+        className="group-hover:scale-105 transition-transform duration-500"
       />
 
       {/* Category badge — always visible */}
@@ -107,7 +45,7 @@ function PhotoCard({ photo, onClick }) {
         {photo.category_display}
       </span>
 
-      {/* Full dark overlay on hover — title centered */}
+      {/* Hover overlay */}
       <div className="absolute inset-0 bg-black/85 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-5 z-20">
         <p className="text-white font-black uppercase text-center text-base leading-tight" style={{ fontFamily: 'Oswald, sans-serif' }}>
           {photo.title}
@@ -123,47 +61,26 @@ function PhotoCard({ photo, onClick }) {
   )
 }
 
-/* ── Empty state ────────────────────────────────────────── */
-function EmptyState({ category }) {
-  const label = TABS.find(t => t.value === category)?.label || 'Gallery'
-  return (
-    <div className="text-center py-24 border border-gfc-700/30 bg-gfc-900/30">
-      <p className="text-gfc-lime/10 font-black text-6xl mb-4" style={{ fontFamily: 'Oswald, sans-serif' }}>GFC</p>
-      <p className="text-gray-400 font-bold text-sm uppercase tracking-widest">No Photos Yet</p>
-      <p className="text-gray-600 text-sm mt-1">
-        {category ? `No ${label} photos have been published.` : 'No photos have been published yet.'}
-      </p>
-      <p className="text-gray-700 text-xs mt-1">Check back soon.</p>
-    </div>
-  )
-}
-
 /* ── Gallery page ───────────────────────────────────────── */
 export default function Gallery() {
   const [activeCategory, setActiveCategory] = useState('')
-  const [lightboxPhoto, setLightboxPhoto] = useState(null)
+  const [lightboxIndex,  setLightboxIndex]  = useState(null)
 
-  // Fetch all photos once, filter client-side
-  const { data: allPhotos, isLoading } = useQuery({
-    queryKey: ['gallery'],
-    queryFn: () => getGallery(''),
-  })
+  const { data: allPhotos, loading, error, errorType, retry } = useFetch('/api/gallery/')
 
+  // Client-side category filter
   const photos = activeCategory
     ? allPhotos?.filter(p => p.category === activeCategory)
     : allPhotos
 
-  // Count per category
+  // Count per category for tab badges
   const counts = allPhotos?.reduce((acc, p) => {
     acc[p.category] = (acc[p.category] || 0) + 1
     return acc
   }, {}) ?? {}
 
-  const openLightbox = useCallback((photo) => setLightboxPhoto(photo), [])
-  const closeLightbox = useCallback(() => setLightboxPhoto(null), [])
-
   return (
-    <div className="min-h-screen bg-gfc-900">
+    <div className="min-h-screen bg-white">
       <SEO
         title="Gallery"
         description="Photos from training sessions, match days and academy programmes at Hillyfielders Gorkha FC."
@@ -182,27 +99,31 @@ export default function Gallery() {
         </div>
       </section>
 
-      {/* ── Filter tabs ── */}
-      <div className="bg-gfc-800 border-b border-gfc-700 sticky top-[73px] z-40">
+      {/* ── Filter tabs — sticky, tracks navbar via --nav-offset CSS var ── */}
+      <div
+        className="bg-white border-b border-gray-200 sticky z-40"
+        style={{ top: 'var(--nav-offset, 0px)', transition: 'top 300ms ease-in-out' }}
+      >
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-stretch gap-0 overflow-x-auto no-scrollbar">
             {TABS.map(tab => {
               const count = tab.value === '' ? allPhotos?.length : counts[tab.value]
+              const isActive = activeCategory === tab.value
               return (
                 <button
                   key={tab.value}
                   onClick={() => setActiveCategory(tab.value)}
-                  className={`flex-shrink-0 px-6 py-5 text-[11px] font-black uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${activeCategory === tab.value
-                      ? 'text-gfc-lime border-gfc-lime'
-                      : 'text-gray-400 border-transparent hover:text-white hover:border-gfc-lime/40'
-                    }`}
+                  className={`flex-shrink-0 px-6 py-4 text-[11px] font-black uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
+                    isActive
+                      ? 'text-gfc-700 border-gfc-lime'
+                      : 'text-gray-400 border-transparent hover:text-gray-700 hover:border-gray-200'
+                  }`}
                 >
                   {tab.label}
                   {count != null && count > 0 && (
-                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-sm leading-none ${activeCategory === tab.value
-                        ? 'bg-gfc-lime text-gfc-900'
-                        : 'bg-gfc-700 text-gray-400'
-                      }`}>
+                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-sm leading-none ${
+                      isActive ? 'bg-gfc-lime text-gfc-900' : 'bg-gray-100 text-gray-500'
+                    }`}>
                       {count}
                     </span>
                   )}
@@ -215,22 +136,45 @@ export default function Gallery() {
 
       {/* ── Masonry grid ── */}
       <div className="max-w-7xl mx-auto px-6 py-10">
-        {isLoading ? (
+
+        {loading ? (
           <GallerySkeleton count={8} />
+        ) : error ? (
+          <ErrorMessage type={errorType} message={error} onRetry={retry} context="gallery" />
         ) : !photos?.length ? (
-          <EmptyState category={activeCategory} />
+          <ErrorMessage type="empty" context="gallery" />
         ) : (
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
-            {photos.map(photo => (
-              <PhotoCard key={photo.id} photo={photo} onClick={openLightbox} />
-            ))}
-          </div>
+          <>
+            {/* Photo count */}
+            <p className="text-gray-400 text-xs font-medium mb-5">
+              {photos.length} {photos.length === 1 ? 'photo' : 'photos'}
+              {activeCategory && ` · ${TABS.find(t => t.value === activeCategory)?.label}`}
+            </p>
+
+            {/* Masonry columns */}
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-3">
+              {photos.map((photo, idx) => (
+                <PhotoCard
+                  key={photo.id}
+                  photo={photo}
+                  index={idx}
+                  priority={idx === 0}
+                  onOpen={setLightboxIndex}
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
 
       {/* ── Lightbox ── */}
-      {lightboxPhoto && (
-        <Lightbox photo={lightboxPhoto} onClose={closeLightbox} />
+      {lightboxIndex !== null && photos?.length > 0 && (
+        <Lightbox
+          photos={photos}
+          currentIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={setLightboxIndex}
+        />
       )}
     </div>
   )

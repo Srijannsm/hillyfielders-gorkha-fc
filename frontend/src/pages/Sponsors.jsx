@@ -104,6 +104,8 @@ export default function Sponsors() {
                           <img
                             src={sponsor.logo}
                             alt={sponsor.name}
+                            loading="lazy"
+                            decoding="async"
                             className={`${cfg.logoH} object-contain opacity-60 group-hover:opacity-100 transition-opacity`}
                           />
                         ) : (

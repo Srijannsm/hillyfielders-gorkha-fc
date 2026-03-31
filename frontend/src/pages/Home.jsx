@@ -45,6 +45,7 @@ function NewsCard({ article, featured = false }) {
 
 /* ── Fixture column ─────────────────────────────────────── */
 function FixtureColumn({ label, slug, fixture, isLoading }) {
+  // console.log({fixture})
   return (
     <div className="flex-1 px-8 py-8 flex flex-col gap-5">
       <div className="flex items-center gap-3">
@@ -58,12 +59,14 @@ function FixtureColumn({ label, slug, fixture, isLoading }) {
           <div className="flex items-center gap-3">
             <p className="text-white font-black uppercase text-sm md:text-base flex-1 text-right leading-tight">
               {fixture.home_team_name}
+              <p className="text-lime-300 text-[10px] mt-0.5 uppercase tracking-wide">({fixture.team_name})</p>
             </p>
             <span className="bg-gfc-lime text-gfc-900 font-black text-[10px] px-3 py-1.5 flex-shrink-0 tracking-widest">
               VS
             </span>
             <p className="text-white font-black uppercase text-sm md:text-base flex-1 leading-tight">
               {fixture.away_team_name}
+              <p className="text-lime-300 text-[10px] mt-0.5 uppercase tracking-wide">({fixture.team_name})</p>
             </p>
           </div>
           <div className="flex items-center justify-between">
@@ -98,8 +101,8 @@ function FixturesBand({ mensFixtures, womensFixtures, mensLoading, womensLoading
     <section className="bg-gfc-900 border-y border-gfc-700">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-gfc-700">
-          <FixtureColumn label="Men's Programme" slug={MENS_SLUG} fixture={mensFixtures?.[0] ?? null} isLoading={mensLoading} />
-          <FixtureColumn label="Women's Programme" slug={WOMENS_SLUG} fixture={womensFixtures?.[0] ?? null} isLoading={womensLoading} />
+          <FixtureColumn label="Men's" slug={MENS_SLUG} fixture={mensFixtures?.[0] ?? null} isLoading={mensLoading} />
+          <FixtureColumn label="Women's" slug={WOMENS_SLUG} fixture={womensFixtures?.[0] ?? null} isLoading={womensLoading} />
         </div>
       </div>
     </section>
@@ -207,19 +210,19 @@ function GalleryGlimpse({ photos }) {
   const gridPhotos = photos.slice(0, 9)
 
   return (
-    <section className="bg-gfc-900 py-20 px-6">
+    <section className="bg-white py-20 px-6 border-t border-gray-100">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-end justify-between mb-10">
           <div>
-            <p className="eyebrow mb-4">Behind the Scenes</p>
-            <h2 className="text-white font-black uppercase" style={{ fontSize: 'clamp(32px, 4.5vw, 52px)' }}>
+            <p className="eyebrow-light mb-4">Behind the Scenes</p>
+            <h2 className="text-gray-900 font-black uppercase" style={{ fontSize: 'clamp(32px, 4.5vw, 52px)' }}>
               Gallery
             </h2>
           </div>
           <Link
             to="/gallery"
-            className="text-gfc-lime text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors flex items-center gap-2 flex-shrink-0"
+            className="text-gfc-700 text-[10px] font-black uppercase tracking-widest hover:text-gfc-500 transition-colors flex items-center gap-2 flex-shrink-0"
           >
             View All <span>→</span>
           </Link>
@@ -257,14 +260,14 @@ function GalleryGlimpse({ photos }) {
 
         {/* CTA row */}
         <div className="mt-6 flex items-center justify-center gap-4">
-          <div className="flex-1 h-px bg-gfc-700" />
+          <div className="flex-1 h-px bg-gray-200" />
           <Link
             to="/gallery"
-            className="bg-gfc-lime text-gfc-900 font-black px-8 py-3 text-[10px] uppercase tracking-widest hover:bg-white transition-colors flex-shrink-0"
+            className="bg-gfc-lime text-gfc-900 font-black px-8 py-3 text-[10px] uppercase tracking-widest hover:bg-gfc-900 hover:text-gfc-lime transition-colors flex-shrink-0"
           >
             See Full Gallery
           </Link>
-          <div className="flex-1 h-px bg-gfc-700" />
+          <div className="flex-1 h-px bg-gray-200" />
         </div>
       </div>
 
@@ -415,6 +418,10 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* ── GALLERY GLIMPSE ─────────────────────────────── */}
+      <GalleryGlimpse photos={galleryPhotos} />
+
       {/* ── HOME GROUND (minimal strip) ─────────────────── */}
       <section className="bg-gfc-800 border-y border-gfc-700 py-8 px-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
@@ -445,10 +452,6 @@ export default function Home() {
           </p>
         </div>
       </section>
-
-      {/* ── GALLERY GLIMPSE ─────────────────────────────── */}
-      <GalleryGlimpse photos={galleryPhotos} />
-
 
       {/* ── SPONSORS STRIP ──────────────────────────────── */}
       {/* {sponsors?.length > 0 && (

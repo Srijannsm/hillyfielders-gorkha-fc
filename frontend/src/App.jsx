@@ -2,6 +2,7 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import PageTransition from './components/PageTransition'
+import ErrorBoundary from './components/errors/ErrorBoundary'
 import Home from './pages/Home'
 import Squad from './pages/Squad'
 import Fixtures from './pages/Fixtures'
@@ -47,19 +48,19 @@ export default function App() {
           <Route path="/" element={<Home />} />
 
           {/* Dynamic team routes */}
-          <Route path="/:teamType/squad" element={<Squad />} />
-          <Route path="/:teamType/fixtures" element={<Fixtures />} />
-          <Route path="/:teamType/results" element={<Fixtures />} />
+          <Route path="/:teamType/squad" element={<ErrorBoundary><Squad /></ErrorBoundary>} />
+          <Route path="/:teamType/fixtures" element={<ErrorBoundary><Fixtures /></ErrorBoundary>} />
+          <Route path="/:teamType/results" element={<ErrorBoundary><Fixtures /></ErrorBoundary>} />
 
           {/* News */}
-          <Route path="/news" element={<NewsList />} />
-          <Route path="/news/:slug" element={<ArticleDetail />} />
+          <Route path="/news" element={<ErrorBoundary><NewsList /></ErrorBoundary>} />
+          <Route path="/news/:slug" element={<ErrorBoundary><ArticleDetail /></ErrorBoundary>} />
 
           {/* Gallery */}
-          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/gallery" element={<ErrorBoundary><Gallery /></ErrorBoundary>} />
 
           {/* About */}
-          <Route path="/about" element={<About />} />
+          <Route path="/about" element={<ErrorBoundary><About /></ErrorBoundary>} />
 
           {/* Other pages */}
           <Route path="/sponsors" element={<Sponsors />} />

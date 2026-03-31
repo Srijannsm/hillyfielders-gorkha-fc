@@ -76,6 +76,42 @@ export default function Navbar() {
   const [activeProgramme, setActiveProgramme] = useState(null)
   const teamsRef = useRef(null)
 
+  /* Hide-on-scroll */
+  const [visible, setVisible] = useState(true)
+  const lastScrollY = useRef(0)
+  const navRef = useRef(null)
+
+  // Set --navbar-height once on mount so sticky children can offset correctly
+  useEffect(() => {
+    if (!navRef.current) return
+    const h = navRef.current.getBoundingClientRect().height
+    document.documentElement.style.setProperty('--navbar-height', `${h}px`)
+    document.documentElement.style.setProperty('--nav-offset', `${h}px`)
+  }, [])
+
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      '--nav-offset',
+      visible ? 'var(--navbar-height, 72px)' : '0px'
+    )
+  }, [visible])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY
+      if (currentY < 80) {
+        setVisible(true)
+      } else if (currentY > lastScrollY.current) {
+        setVisible(false)
+      } else {
+        setVisible(true)
+      }
+      lastScrollY.current = currentY
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   const close = () => { setMenuOpen(false); setMobileTeamsOpen(false); setOpenProgramme(null) }
 
   const { data: programmes = [] } = useQuery({
@@ -108,7 +144,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-gfc-800 sticky top-0 z-50 shadow-lg">
+    <nav ref={navRef} className={`bg-gfc-800 sticky top-0 z-50 shadow-lg transition-transform duration-300 ease-in-out ${visible ? 'translate-y-0' : '-translate-y-full'}`}>
 
       {/* Top info bar */}
       <div className="bg-gfc-900 border-b border-gfc-700 hidden md:block">

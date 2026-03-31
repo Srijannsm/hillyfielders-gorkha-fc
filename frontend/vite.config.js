@@ -11,5 +11,19 @@ export default defineConfig({
     proxy: {
       '/api': 'http://127.0.0.1:8000'
     }
-  }
+  },
+  build: {
+    // Inline assets smaller than 4 KB as base64 (saves round-trips for tiny icons)
+    assetsInlineLimit: 4096,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split heavy vendor libs into separate cache-friendly chunks
+          'vendor-react':  ['react', 'react-dom', 'react-router-dom'],
+          'vendor-query':  ['@tanstack/react-query'],
+          'vendor-ui':     ['react-helmet-async'],
+        },
+      },
+    },
+  },
 })

@@ -70,8 +70,8 @@ export default function Contact() {
                   icon: '✉',
                   label: 'Email',
                   content: (
-                    <a href="mailto:info@gorkhafc.com" className="text-gray-500 text-sm hover:text-gfc-700 transition-colors">
-                      info@gorkhafc.com
+                    <a href="mailto:info@hillyfieldersgorkhafc.com" className="text-gray-500 text-sm hover:text-gfc-700 transition-colors">
+                      <p className="text-gray-500 text-sm">info@hillyfieldersgorkhafc.com</p>
                     </a>
                   ),
                 },
@@ -80,7 +80,7 @@ export default function Contact() {
                   label: 'WhatsApp',
                   content: (
                     <a href="https://wa.me/9779861882503" target="_blank" rel="noopener noreferrer" className="text-gray-500 text-sm hover:text-gfc-700 transition-colors">
-                      +977 986-1882503
+                      <p className="text-gray-500 text-sm">+977 986-1882503</p>
                     </a>
                   ),
                 },
