@@ -157,7 +157,7 @@ export default function About() {
       </section>
 
       {/* ── SECTION 4: Current Programmes ── */}
-      <section className="px-6 py-20" style={{ backgroundColor: '#BEFF00' }}>
+      <section className="px-6 py-20" style={{ backgroundColor: '#4ade80' }}>
         <div className="max-w-7xl mx-auto">
           <div className="mb-10">
             <p className="text-gfc-900/60 text-[11px] font-black uppercase tracking-widest mb-4 flex items-center gap-3">
@@ -230,20 +230,20 @@ export default function About() {
       </section>
 
       {/* ── SECTION 6: Join the journey CTA ── */}
-      <section className="bg-gfc-900 px-6 py-24 relative overflow-hidden">
+      <section className="bg-gfc-lime px-6 py-24 relative overflow-hidden">
         {/* Watermark */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <img src="/logo.png" alt="" className="w-72 h-72 object-contain opacity-[0.04]"
+          <img src="/logo.png" alt="" className="w-72 h-72 object-contain opacity-[0.08]"
             onError={e => e.target.style.display = 'none'} />
         </div>
 
         <div className="relative z-10 max-w-2xl mx-auto text-center">
-          <p className="eyebrow mb-6" style={{ justifyContent: 'center' }}>Get Involved</p>
-          <h2 className="text-white font-black uppercase leading-tight mb-6"
+          <p className="eyebrow-light mb-6" style={{ justifyContent: 'center' }}>Get Involved</p>
+          <h2 className="text-gfc-900 font-black uppercase leading-tight mb-6"
             style={{ fontFamily: 'Oswald, sans-serif', fontSize: 'clamp(36px, 5vw, 64px)' }}>
-            Be Part of<br /><span className="text-gfc-lime">the Story</span>
+            Be Part of<br />the Story
           </h2>
-          <p className="text-gray-400 text-sm leading-relaxed mb-10 max-w-lg mx-auto">
+          <p className="text-gfc-800 text-sm leading-relaxed mb-10 max-w-lg mx-auto">
             Whether you are a player, a supporter, a sponsor or simply someone who loves football —
             Hillyfielders Gorkha FC welcomes you. Follow us on Facebook, get in touch, and be part
             of something special from the very beginning.
@@ -254,14 +254,14 @@ export default function About() {
                 href={club.facebook_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-gfc-lime text-gfc-900 font-black px-8 py-4 text-xs uppercase tracking-widest hover:bg-white transition-colors inline-block"
+                className="bg-gfc-900 text-gfc-lime font-black px-8 py-4 text-xs uppercase tracking-widest hover:bg-gfc-800 transition-colors inline-block"
               >
                 Follow on Facebook
               </a>
             )}
             <Link
               to="/contact"
-              className="border border-gfc-700 text-white font-black px-8 py-4 text-xs uppercase tracking-widest hover:border-gfc-lime hover:text-gfc-lime transition-colors inline-block"
+              className="border-2 border-gfc-900 text-gfc-900 font-black px-8 py-4 text-xs uppercase tracking-widest hover:bg-gfc-900 hover:text-gfc-lime transition-colors inline-block"
             >
               Contact Us
             </Link>

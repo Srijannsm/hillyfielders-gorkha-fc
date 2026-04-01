@@ -473,12 +473,12 @@ export default function Home() {
         </section>
       )} */}
 
-      {/* ── STAY CONNECTED (lime) ───────────────────────── */}
+      {/* ── STAY CONNECTED (light green) ───────────────────────── */}
       <section className="bg-gfc-lime py-24 px-6 relative overflow-hidden">
         {/* Watermark */}
         <div className="absolute right-0 top-0 bottom-0 flex items-center pointer-events-none select-none overflow-hidden">
           <p className="text-gfc-900/[0.06] font-black uppercase leading-none pr-8" style={{ fontFamily: 'Oswald, sans-serif', fontSize: 'clamp(120px, 16vw, 200px)' }}>
-            GFC
+            <img src="/logo.png" alt="" className="w-[480px] h-[480px] object-contain opacity-[0.2]" onError={e => e.target.style.display = 'none'} />
           </p>
         </div>
 

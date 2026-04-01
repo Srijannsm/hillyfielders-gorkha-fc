@@ -8,7 +8,7 @@ function TeamsDropdown({ programmes, activeProgramme, onProgrammeHover, onClose 
   if (!programmes?.length) return null
 
   return (
-    <div className="absolute top-full left-0 mt-0 shadow-2xl z-50 border-t-2 border-t-gfc-lime">
+    <div className="absolute top-full left-0 mt-0 shadow-2xl z-50 border-t-2 ">
       <div className="bg-gfc-900 w-44">
         {programmes.map(p => {
           const label = p.name.replace(/\s*programme$/i, '').trim()

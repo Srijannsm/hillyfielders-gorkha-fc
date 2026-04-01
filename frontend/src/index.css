@@ -6,7 +6,7 @@
   --color-gfc-800: #1d3d20;   /* dark    — navbar, hero bg     */
   --color-gfc-700: #2c5c30;   /* mid     — cards, borders      */
   --color-gfc-500: #3d7a40;   /* medium  — logo main shield    */
-  --color-gfc-lime: #beff00;  /* accent  — logo yellow-green   */
+  --color-gfc-lime: #4ade80;  /* accent  — light green         */
 }
 
 * {
@@ -74,14 +74,14 @@ h1, h2, h3, h4, .font-display {
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #BEFF00;
+  color: #4ade80;
 }
 .eyebrow::before {
   content: '';
   display: block;
   width: 28px;
   height: 2px;
-  background: #BEFF00;
+  background: #4ade80;
   flex-shrink: 0;
 }
 
