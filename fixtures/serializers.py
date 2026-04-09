@@ -20,7 +20,7 @@ class FixtureSerializer(serializers.ModelSerializer):
         model = Fixture
         fields = [
             'id', 'home_team_name', 'away_team_name',
-            'our_team', 'team_name', 'competition_name',
+            'our_team', 'team_name', 'competition', 'competition_name',
             'date', 'venue', 'is_home_game',
             'home_score', 'away_score',
             'is_completed', 'result'

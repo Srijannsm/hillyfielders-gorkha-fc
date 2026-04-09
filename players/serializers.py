@@ -17,10 +17,11 @@ class PlayerSerializer(serializers.ModelSerializer):
 
 class StaffSerializer(serializers.ModelSerializer):
     role_display = serializers.CharField(source='get_role_display', read_only=True)
+    team_name    = serializers.CharField(source='team.name', read_only=True)
 
     class Meta:
         model  = Staff
-        fields = ['id', 'name', 'role', 'role_display', 'photo', 'bio', 'team']
+        fields = ['id', 'name', 'role', 'role_display', 'photo', 'bio', 'team', 'team_name']
 
 
 class TeamSerializer(serializers.ModelSerializer):
