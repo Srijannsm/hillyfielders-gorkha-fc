@@ -9,35 +9,42 @@ function TeamsDropdown({ programmes, activeProgramme, onProgrammeHover, onClose 
 
   return (
     <div className="absolute top-full left-0 mt-0 shadow-2xl z-50 border-t-2 ">
-      <div className="bg-gfc-900 w-44">
+      <div className="bg-gfc-900 w-44" role="menu">
         {programmes.map(p => {
           const label = p.name.replace(/\s*programme$/i, '').trim()
           const isActive = activeProgramme === p.id
 
           return (
-            <div
-              key={p.id}
-              onMouseEnter={() => onProgrammeHover(p.id)}
-              className={`relative flex items-center justify-between px-5 py-4 cursor-default select-none transition-colors border-b border-gfc-700/40 last:border-b-0 ${
-                isActive ? 'bg-gfc-800 text-gfc-lime' : 'text-gray-400 hover:text-white hover:bg-gfc-800/50'
-              }`}
-            >
-              <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
-              <svg
-                className={`w-3 h-3 flex-shrink-0 transition-colors ${isActive ? 'text-gfc-lime' : 'text-gfc-700'}`}
-                fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
+            <div key={p.id} className="relative border-b border-gfc-700/40 last:border-b-0">
+              {/* Keyboard-focusable programme row */}
+              <button
+                type="button"
+                onMouseEnter={() => onProgrammeHover(p.id)}
+                onFocus={() => onProgrammeHover(p.id)}
+                aria-expanded={isActive}
+                aria-haspopup="menu"
+                className={`w-full flex items-center justify-between px-5 py-4 cursor-pointer transition-colors ${
+                  isActive ? 'bg-gfc-800 text-gfc-lime' : 'text-gray-400 hover:text-white hover:bg-gfc-800/50'
+                }`}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+                <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
+                <svg
+                  className={`w-3 h-3 flex-shrink-0 transition-colors ${isActive ? 'text-gfc-lime' : 'text-gfc-700'}`}
+                  fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
 
-              {/* Fly-out — anchored to this row, never adds height to left panel */}
+              {/* Fly-out — anchored to this row, sibling to button so Links stay outside button */}
               {isActive && p.teams.length > 0 && (
-                <div className="absolute left-full top-0 bg-gfc-800 border-l border-t border-gfc-700 w-52 z-50">
+                <div role="menu" className="absolute left-full top-0 bg-gfc-800 border-l border-t border-gfc-700 w-52 z-50">
                   {p.teams.map(team => (
                     <Link
                       key={team.slug}
                       to={`/${team.slug}/squad`}
                       onClick={onClose}
+                      role="menuitem"
                       className="group flex items-center justify-between gap-2 px-5 py-3.5 text-gray-300 hover:text-gfc-lime hover:bg-gfc-700/30 transition-colors border-b border-gfc-700/40 last:border-b-0"
                     >
                       <span className="text-[11px] font-black uppercase tracking-widest">{team.name}</span>
@@ -124,13 +131,22 @@ export default function Navbar() {
   useEffect(() => {
     if (!teamsOpen) return
     const handler = (e) => {
+      if (e.type === 'keydown' && e.key === 'Escape') {
+        setTeamsOpen(false)
+        setActiveProgramme(null)
+        return
+      }
       if (teamsRef.current && !teamsRef.current.contains(e.target)) {
         setTeamsOpen(false)
         setActiveProgramme(null)
       }
     }
     document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    document.addEventListener('keydown', handler)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      document.removeEventListener('keydown', handler)
+    }
   }, [teamsOpen])
 
   const openTeams = () => {
@@ -189,6 +205,8 @@ export default function Navbar() {
           <div ref={teamsRef} className="relative flex items-stretch">
             <button
               onClick={() => teamsOpen ? closeTeams() : openTeams()}
+              aria-haspopup="menu"
+              aria-expanded={teamsOpen}
               className={`flex items-center gap-1.5 px-4 text-xs font-black tracking-widest uppercase border-b-2 transition-colors ${
                 teamsOpen
                   ? 'text-gfc-lime border-gfc-lime'

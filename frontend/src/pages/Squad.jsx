@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom'
-import useFetch from '../hooks/useFetch'
+import { useQuery } from '@tanstack/react-query'
+import { getTeamBySlug } from '../services/api'
 import TeamPageTabs from '../components/TeamPageTabs'
 import SEO from '../components/SEO'
 import PlayerCardSkeleton from '../components/skeletons/PlayerCardSkeleton'
@@ -113,9 +114,13 @@ function PositionSection({ label, count, children }) {
 export default function Squad() {
   const { teamType } = useParams()
 
-  const { data: teams, loading, error, errorType, retry } = useFetch('/api/players/teams/')
+  // Fetches ONLY this team's data — not all teams
+  const { data: team, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['team', teamType],
+    queryFn: () => getTeamBySlug(teamType),
+  })
 
-  if (loading) return (
+  if (isLoading) return (
     <div className="min-h-screen bg-white">
       <div className="bg-gfc-900 pt-10 pb-10 px-6">
         <div className="max-w-7xl mx-auto">
@@ -130,13 +135,8 @@ export default function Squad() {
     </div>
   )
 
-  if (error) return (
-    <ErrorMessage type={errorType} message={error} onRetry={retry} context="squad" />
-  )
-
-  const team = teams?.find(t => t.slug === teamType)
-
-  if (!team) return (
+  // 404 means the team slug doesn't exist or isn't active yet — show coming soon
+  if (isError && error?.response?.status === 404) return (
     <div>
       <section className="section-bg bg-gfc-900 text-white pt-10 pb-10 px-6">
         <div className="max-w-7xl mx-auto">
@@ -157,6 +157,16 @@ export default function Squad() {
         </div>
       </div>
     </div>
+  )
+
+  // Any other error (network, 500, etc.)
+  if (isError) return (
+    <ErrorMessage
+      type={error?.response?.status ? 'server' : 'network'}
+      message={error?.message}
+      onRetry={refetch}
+      context="squad"
+    />
   )
 
   const grouped = POSITION_ORDER.reduce((acc, pos) => {

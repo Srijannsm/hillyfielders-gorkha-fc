@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getAdminPhotos, createPhoto, updatePhoto, deletePhoto } from '../services/adminApi'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ImageUpload from '../components/ImageUpload'
+import { Search } from 'lucide-react'
 
 const CATEGORIES = [
   { value: 'training',  label: 'Training' },
@@ -75,6 +76,7 @@ export default function Gallery() {
   const [modal, setModal] = useState(null)
   const [toDelete, setToDelete] = useState(null)
   const [filter, setFilter] = useState('all')
+  const [search, setSearch] = useState('')
 
   const { data: photos = [], isLoading } = useQuery({ queryKey: ['admin-photos'], queryFn: getAdminPhotos })
 
@@ -85,21 +87,36 @@ export default function Gallery() {
 
   function handleSave(fd) { return modal.item ? updateP.mutateAsync([modal.item.id, fd]) : createP.mutateAsync(fd) }
 
-  const filtered = filter === 'all' ? photos : photos.filter(p => p.category === filter)
+  const filtered = useMemo(() => {
+    let data = filter === 'all' ? photos : photos.filter(p => p.category === filter)
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      data = data.filter(p => p.title?.toLowerCase().includes(q) || p.caption?.toLowerCase().includes(q))
+    }
+    return data
+  }, [photos, filter, search])
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
+        {/* Search */}
+        <div className="relative" style={{ width: '176px' }}>
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Search photos…"
+            className="input"
+            style={{ paddingLeft: '2rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', fontSize: '0.8125rem' }} />
+        </div>
         {/* Category filter */}
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1 flex-wrap">
+        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
           {['all', ...CATEGORIES.map(c => c.value)].map(v => (
             <button key={v} onClick={() => setFilter(v)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors capitalize ${filter === v ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
-              {v === 'all' ? 'All' : CATEGORIES.find(c => c.value === v)?.label}
+              {v === 'all' ? `All (${photos.length})` : CATEGORIES.find(c => c.value === v)?.label}
             </button>
           ))}
         </div>
-        <button onClick={() => setModal({ item: null })} className="btn-primary">+ Upload Photo</button>
+        <button onClick={() => setModal({ item: null })} className="btn-primary ml-auto">+ Upload Photo</button>
       </div>
 
       {isLoading ? (

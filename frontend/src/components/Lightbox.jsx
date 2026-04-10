@@ -1,7 +1,10 @@
 import { useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 
 /**
  * Lightbox — full-screen image viewer with arrow navigation.
+ * Rendered via a React portal directly into document.body so it
+ * always escapes any parent stacking context (sticky navbar, etc.).
  *
  * Props:
  *   photos       — array of photo objects ({ image, alt, title, caption })
@@ -40,9 +43,9 @@ export default function Lightbox({ photos, currentIndex, onClose, onNavigate }) 
 
   if (!photo) return null
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
       onClick={onClose}
     >
       {/* ── Left arrow ─────────────────────────────────────────────────────── */}
@@ -112,6 +115,7 @@ export default function Lightbox({ photos, currentIndex, onClose, onNavigate }) 
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

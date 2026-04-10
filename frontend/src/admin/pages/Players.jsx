@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getAdminPlayers, createPlayer, updatePlayer, deletePlayer,
@@ -9,6 +9,7 @@ import DataTable from '../components/DataTable'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ImageUpload from '../components/ImageUpload'
+import { Search, X } from 'lucide-react'
 
 const POSITIONS = ['GK', 'DEF', 'MID', 'FWD']
 const ROLES = ['head_coach', 'assistant_coach', 'goalkeeper_coach', 'physio', 'manager']
@@ -154,6 +155,7 @@ export default function Players() {
   const qc = useQueryClient()
   const [tab, setTab] = useState('players')
   const [teamFilter, setTeamFilter] = useState('all')
+  const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null)   // null | { type, item? }
   const [toDelete, setToDelete] = useState(null)
 
@@ -161,8 +163,23 @@ export default function Players() {
   const { data: staff   = [], isLoading: loadingS } = useQuery({ queryKey: ['admin-staff'],   queryFn: getAdminStaff   })
   const { data: teams   = [] }                       = useQuery({ queryKey: ['admin-teams'],   queryFn: getAdminTeams   })
 
-  const filteredPlayers = teamFilter === 'all' ? players : players.filter(p => p.team === Number(teamFilter))
-  const filteredStaff   = teamFilter === 'all' ? staff   : staff.filter(s => s.team === Number(teamFilter))
+  const filteredPlayers = useMemo(() => {
+    let data = teamFilter === 'all' ? players : players.filter(p => p.team === Number(teamFilter))
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      data = data.filter(p => p.name?.toLowerCase().includes(q) || p.nationality?.toLowerCase().includes(q) || p.position?.toLowerCase().includes(q))
+    }
+    return data
+  }, [players, teamFilter, search])
+
+  const filteredStaff = useMemo(() => {
+    let data = teamFilter === 'all' ? staff : staff.filter(s => s.team === Number(teamFilter))
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      data = data.filter(s => s.name?.toLowerCase().includes(q) || s.role_display?.toLowerCase().includes(q))
+    }
+    return data
+  }, [staff, teamFilter, search])
 
   const invalidate = () => {
     qc.invalidateQueries(['admin-players'])
@@ -223,24 +240,36 @@ export default function Players() {
           ))}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <select
-            value={teamFilter}
-            onChange={e => setTeamFilter(e.target.value)}
-            className="input py-1.5 w-48 text-sm"
-          >
-            <option value="all">All Teams</option>
-            {['mens', 'womens'].map(gender => {
-              const genderTeams = teams.filter(t => t.programme_gender === gender)
-              if (!genderTeams.length) return null
-              return (
-                <optgroup key={gender} label={gender === 'mens' ? "Men's" : "Women's"}>
-                  {genderTeams.map(t => (
-                    <option key={t.id} value={t.id}>{t.programme_gender === 'mens' ? "Men's" : "Women's"}-{t.name}</option>
-                  ))}
-                </optgroup>
-              )
-            })}
-          </select>
+          <div className="relative" style={{ width: '176px' }}>
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search name…"
+              className="input"
+              style={{ paddingLeft: '2rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', fontSize: '0.8125rem' }} />
+          </div>
+          <div style={{ width: '160px' }}>
+            <select value={teamFilter} onChange={e => setTeamFilter(e.target.value)}
+              className="input" style={{ paddingTop: '0.375rem', paddingBottom: '0.375rem', fontSize: '0.8125rem' }}>
+              <option value="all">All Teams</option>
+              {['mens', 'womens'].map(gender => {
+                const genderTeams = teams.filter(t => t.programme_gender === gender)
+                if (!genderTeams.length) return null
+                return (
+                  <optgroup key={gender} label={gender === 'mens' ? "Men's" : "Women's"}>
+                    {genderTeams.map(t => (
+                      <option key={t.id} value={t.id}>{t.programme_gender === 'mens' ? "Men's" : "Women's"}-{t.name}</option>
+                    ))}
+                  </optgroup>
+                )
+              })}
+            </select>
+          </div>
+          {(search || teamFilter !== 'all') && (
+            <button onClick={() => { setSearch(''); setTeamFilter('all') }}
+              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">
+              <X size={12} /> Clear
+            </button>
+          )}
           <button onClick={() => setModal({ type: tab })} className="btn-primary whitespace-nowrap">
             + Add {tab === 'players' ? 'Player' : 'Staff'}
           </button>

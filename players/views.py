@@ -44,7 +44,7 @@ class PlayerListView(generics.ListAPIView):
     serializer_class = PlayerSerializer
 
     def get_queryset(self):
-        queryset  = Player.objects.filter(is_active=True)
+        queryset  = Player.objects.filter(is_active=True).order_by('jersey_number')
         team_slug = self.request.query_params.get('team')
         if team_slug:
             queryset = queryset.filter(team__slug=team_slug)
@@ -52,5 +52,5 @@ class PlayerListView(generics.ListAPIView):
 
 
 class PlayerDetailView(generics.RetrieveAPIView):
-    queryset         = Player.objects.all()
+    queryset         = Player.objects.filter(is_active=True)
     serializer_class = PlayerSerializer

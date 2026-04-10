@@ -1,31 +1,37 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import PageTransition from './components/PageTransition'
 import ErrorBoundary from './components/errors/ErrorBoundary'
-import Home from './pages/Home'
-import Squad from './pages/Squad'
-import Fixtures from './pages/Fixtures'
-import { NewsList, ArticleDetail } from './pages/News'
-import Sponsors from './pages/Sponsors'
-import Contact from './pages/Contact'
-import Gallery from './pages/Gallery'
-import About from './pages/About'
 import WhatsAppButton from './components/WhatsAppButton'
 import ScrollToTop from './components/ScrollToTop'
-
-// Admin
 import { AuthProvider } from './admin/context/AuthContext'
-import AdminLayout from './admin/layout/AdminLayout'
-import Login from './admin/pages/Login'
-import Dashboard from './admin/pages/Dashboard'
-import Players from './admin/pages/Players'
-import Teams from './admin/pages/Teams'
-import AdminFixtures from './admin/pages/Fixtures'
-import News from './admin/pages/News'
-import AdminGallery from './admin/pages/Gallery'
-import AdminSponsors from './admin/pages/Sponsors'
-import ClubProfile from './admin/pages/ClubProfile'
+
+// Public pages — code-split per route
+const Home          = lazy(() => import('./pages/Home'))
+const Squad         = lazy(() => import('./pages/Squad'))
+const Fixtures      = lazy(() => import('./pages/Fixtures'))
+const NewsList      = lazy(() => import('./pages/News').then(m => ({ default: m.NewsList })))
+const ArticleDetail = lazy(() => import('./pages/News').then(m => ({ default: m.ArticleDetail })))
+const Sponsors      = lazy(() => import('./pages/Sponsors'))
+const Contact       = lazy(() => import('./pages/Contact'))
+const Gallery       = lazy(() => import('./pages/Gallery'))
+const About         = lazy(() => import('./pages/About'))
+
+// Admin area — separate chunk, only loaded when /admin is visited
+const AdminLayout    = lazy(() => import('./admin/layout/AdminLayout'))
+const Login          = lazy(() => import('./admin/pages/Login'))
+const Dashboard      = lazy(() => import('./admin/pages/Dashboard'))
+const Players        = lazy(() => import('./admin/pages/Players'))
+const Teams          = lazy(() => import('./admin/pages/Teams'))
+const AdminFixtures  = lazy(() => import('./admin/pages/Fixtures'))
+const News           = lazy(() => import('./admin/pages/News'))
+const AdminGallery   = lazy(() => import('./admin/pages/Gallery'))
+const AdminSponsors  = lazy(() => import('./admin/pages/Sponsors'))
+const ClubProfile    = lazy(() => import('./admin/pages/ClubProfile'))
+const Enquiries      = lazy(() => import('./admin/pages/Enquiries'))
+const AdminProfile   = lazy(() => import('./admin/pages/Profile'))
 
 function ComingSoon({ page }) {
   return (
@@ -56,21 +62,23 @@ function PublicSite() {
       <Navbar />
       <main className="flex-1">
         <PageTransition key={location.pathname}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/:teamType/squad" element={<ErrorBoundary><Squad /></ErrorBoundary>} />
-            <Route path="/:teamType/fixtures" element={<ErrorBoundary><Fixtures /></ErrorBoundary>} />
-            <Route path="/:teamType/results" element={<ErrorBoundary><Fixtures /></ErrorBoundary>} />
-            <Route path="/news" element={<ErrorBoundary><NewsList /></ErrorBoundary>} />
-            <Route path="/news/:slug" element={<ErrorBoundary><ArticleDetail /></ErrorBoundary>} />
-            <Route path="/gallery" element={<ErrorBoundary><Gallery /></ErrorBoundary>} />
-            <Route path="/about" element={<ErrorBoundary><About /></ErrorBoundary>} />
-            <Route path="/sponsors" element={<Sponsors />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/academy" element={<ComingSoon page="Academy Programme" />} />
-            <Route path="/mens" element={<ComingSoon page="Men's Programme" />} />
-            <Route path="/womens" element={<ComingSoon page="Women's Programme" />} />
-          </Routes>
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/:teamType/squad" element={<ErrorBoundary><Squad /></ErrorBoundary>} />
+              <Route path="/:teamType/fixtures" element={<ErrorBoundary><Fixtures /></ErrorBoundary>} />
+              <Route path="/:teamType/results" element={<ErrorBoundary><Fixtures /></ErrorBoundary>} />
+              <Route path="/news" element={<ErrorBoundary><NewsList /></ErrorBoundary>} />
+              <Route path="/news/:slug" element={<ErrorBoundary><ArticleDetail /></ErrorBoundary>} />
+              <Route path="/gallery" element={<ErrorBoundary><Gallery /></ErrorBoundary>} />
+              <Route path="/about" element={<ErrorBoundary><About /></ErrorBoundary>} />
+              <Route path="/sponsors" element={<Sponsors />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/academy" element={<ComingSoon page="Academy Programme" />} />
+              <Route path="/mens" element={<ComingSoon page="Men's Programme" />} />
+              <Route path="/womens" element={<ComingSoon page="Women's Programme" />} />
+            </Routes>
+          </Suspense>
         </PageTransition>
       </main>
       <Footer />
@@ -83,23 +91,27 @@ function PublicSite() {
 export default function App() {
   return (
     <AuthProvider>
-      <Routes>
-        {/* Admin panel — no Navbar/Footer */}
-        <Route path="/admin/login" element={<Login />} />
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="players"  element={<Players />} />
-          <Route path="teams"    element={<Teams />} />
-          <Route path="fixtures" element={<AdminFixtures />} />
-          <Route path="news"     element={<News />} />
-          <Route path="gallery"  element={<AdminGallery />} />
-          <Route path="sponsors" element={<AdminSponsors />} />
-          <Route path="club"     element={<ClubProfile />} />
-        </Route>
+      <Suspense fallback={null}>
+        <Routes>
+          {/* Admin panel — no Navbar/Footer */}
+          <Route path="/admin/login" element={<Login />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="players"  element={<Players />} />
+            <Route path="teams"    element={<Teams />} />
+            <Route path="fixtures" element={<AdminFixtures />} />
+            <Route path="news"     element={<News />} />
+            <Route path="gallery"    element={<AdminGallery />} />
+            <Route path="sponsors"  element={<AdminSponsors />} />
+            <Route path="club"      element={<ClubProfile />} />
+            <Route path="enquiries" element={<Enquiries />} />
+            <Route path="profile"   element={<AdminProfile />} />
+          </Route>
 
-        {/* Public site — has Navbar/Footer */}
-        <Route path="/*" element={<PublicSite />} />
-      </Routes>
+          {/* Public site — has Navbar/Footer */}
+          <Route path="/*" element={<PublicSite />} />
+        </Routes>
+      </Suspense>
     </AuthProvider>
   )
 }

@@ -3,7 +3,7 @@ import { Component } from 'react'
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props)
-    this.state = { hasError: false, errorMessage: '' }
+    this.state = { hasError: false, errorMessage: '', resetKey: 0 }
   }
 
   static getDerivedStateFromError(error) {
@@ -12,6 +12,11 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     console.error('[ErrorBoundary]', error, info.componentStack)
+  }
+
+  handleReset = () => {
+    // Increment resetKey to force a full remount of children — clearing broken state
+    this.setState(prev => ({ hasError: false, errorMessage: '', resetKey: prev.resetKey + 1 }))
   }
 
   render() {
@@ -41,7 +46,7 @@ export default class ErrorBoundary extends Component {
               An unexpected error occurred. Try reloading this section.
             </p>
             <button
-              onClick={() => this.setState({ hasError: false, errorMessage: '' })}
+              onClick={this.handleReset}
               className="px-6 py-2.5 text-xs font-black uppercase tracking-widest bg-gray-800 hover:bg-gray-900 text-white transition-colors"
             >
               Reload section
@@ -51,6 +56,11 @@ export default class ErrorBoundary extends Component {
       )
     }
 
-    return this.props.children
+    // key prop forces a full DOM remount of children when resetKey changes
+    return (
+      <div key={this.state.resetKey}>
+        {this.props.children}
+      </div>
+    )
   }
 }

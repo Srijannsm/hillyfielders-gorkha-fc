@@ -62,6 +62,9 @@ class Player(models.Model):
     is_active    = models.BooleanField(default=True)
     joined_date  = models.DateField(blank=True, null=True)
 
+    class Meta:
+        unique_together = [('team', 'jersey_number')]
+
     def __str__(self):
         return f"{self.jersey_number}. {self.name} ({self.get_position_display()})"
 

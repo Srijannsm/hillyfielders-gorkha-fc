@@ -6,7 +6,7 @@ class FixtureListView(generics.ListAPIView):
     serializer_class = FixtureSerializer
 
     def get_queryset(self):
-        queryset = Fixture.objects.all()
+        queryset = Fixture.objects.select_related('our_team', 'competition')
         team_type = self.request.query_params.get('team')
         completed = self.request.query_params.get('completed')
         if team_type:

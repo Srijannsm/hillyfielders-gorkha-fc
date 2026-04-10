@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getAdminArticles, createArticle, updateArticle, deleteArticle,
@@ -8,6 +8,7 @@ import DataTable from '../components/DataTable'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ImageUpload from '../components/ImageUpload'
+import { Search, X } from 'lucide-react'
 
 function ArticleForm({ initial = {}, categories = [], onSave, onClose }) {
   const [f, setF] = useState({
@@ -95,6 +96,9 @@ export default function News() {
   const [tab, setTab] = useState('articles')
   const [modal, setModal] = useState(null)
   const [toDelete, setToDelete] = useState(null)
+  const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
 
   const { data: articles   = [], isLoading: loadingA } = useQuery({ queryKey: ['admin-articles'],   queryFn: getAdminArticles   })
   const { data: categories = [], isLoading: loadingC } = useQuery({ queryKey: ['admin-categories'], queryFn: getAdminCategories })
@@ -116,6 +120,20 @@ export default function News() {
     setToDelete(null)
   }
 
+  const filteredArticles = useMemo(() => {
+    let data = articles
+    if (categoryFilter !== 'all') data = data.filter(a => String(a.category) === categoryFilter)
+    if (statusFilter === 'published') data = data.filter(a => a.is_published)
+    if (statusFilter === 'draft')     data = data.filter(a => !a.is_published)
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      data = data.filter(a => a.title?.toLowerCase().includes(q) || a.category_name?.toLowerCase().includes(q))
+    }
+    return data
+  }, [articles, categoryFilter, statusFilter, search])
+
+  const hasFilters = categoryFilter !== 'all' || statusFilter !== 'all' || search.trim()
+
   const articleCols = [
     { key: 'cover_image', label: 'Cover', render: r => r.cover_image
       ? <img src={r.cover_image} className="h-8 w-12 rounded object-cover" /> : '—' },
@@ -135,8 +153,8 @@ export default function News() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex gap-1 bg-gray-100 rounded-lg p-1 flex-shrink-0">
           {['articles', 'categories'].map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors capitalize ${tab === t ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
@@ -144,13 +162,47 @@ export default function News() {
             </button>
           ))}
         </div>
-        <button onClick={() => setModal({ type: tab })} className="btn-primary">
+        <button onClick={() => setModal({ type: tab })} className="btn-primary flex-shrink-0">
           + Add {tab === 'articles' ? 'Article' : 'Category'}
         </button>
       </div>
 
+      {tab === 'articles' && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative" style={{ width: '196px' }}>
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search articles…"
+              className="input"
+              style={{ paddingLeft: '2rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', fontSize: '0.8125rem' }} />
+          </div>
+          <div style={{ width: '152px' }}>
+            <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}
+              className="input" style={{ paddingTop: '0.375rem', paddingBottom: '0.375rem', fontSize: '0.8125rem' }}>
+              <option value="all">All Categories</option>
+              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div style={{ width: '120px' }}>
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+              className="input" style={{ paddingTop: '0.375rem', paddingBottom: '0.375rem', fontSize: '0.8125rem' }}>
+              <option value="all">All Status</option>
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+            </select>
+          </div>
+          {hasFilters && (
+            <button onClick={() => { setSearch(''); setCategoryFilter('all'); setStatusFilter('all') }}
+              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">
+              <X size={12} /> Clear
+            </button>
+          )}
+          <span className="text-xs text-gray-400 ml-auto whitespace-nowrap">{filteredArticles.length} of {articles.length}</span>
+        </div>
+      )}
+
       {tab === 'articles' ? (
-        <DataTable columns={articleCols} data={articles} loading={loadingA}
+        <DataTable columns={articleCols} data={filteredArticles} loading={loadingA}
           onEdit={item => setModal({ type: 'articles', item })}
           onDelete={item => setToDelete({ type: 'article', item })} />
       ) : (

@@ -1,9 +1,29 @@
 import { Link, useParams } from 'react-router-dom'
-import useFetch from '../hooks/useFetch'
+import { useQuery } from '@tanstack/react-query'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
+import { getNews, getArticle } from '../services/api'
 import SEO from '../components/SEO'
 import NewsCardSkeleton from '../components/skeletons/NewsCardSkeleton'
 import ErrorMessage from '../components/errors/ErrorMessage'
 import LazyImage from '../components/LazyImage'
+
+// Configure marked: safe defaults, GFM enabled
+marked.setOptions({ gfm: true, breaks: true })
+
+function ArticleBody({ content }) {
+  const html = DOMPurify.sanitize(marked.parse(content || ''))
+  return (
+    <div
+      className="prose prose-gray max-w-none text-gray-600 leading-relaxed
+        prose-headings:font-black prose-headings:uppercase prose-headings:text-gray-900
+        prose-a:text-gfc-700 prose-a:no-underline hover:prose-a:underline
+        prose-strong:text-gray-800 prose-blockquote:border-l-gfc-lime
+        prose-img:rounded prose-code:text-gfc-700"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  )
+}
 
 /* ── Article card (dark image overlay) ────────────────── */
 function ArticleCard({ article, featured = false }) {
@@ -48,7 +68,11 @@ function ArticleCard({ article, featured = false }) {
 
 /* ── News list page ────────────────────────────────────── */
 export function NewsList() {
-  const { data: articles, loading, error, errorType, retry } = useFetch('/api/news/')
+  // Shares cache with Home — visiting News after Home shows instantly, no refetch
+  const { data: articles, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['news'],
+    queryFn: getNews,
+  })
 
   return (
     <div>
@@ -72,10 +96,15 @@ export function NewsList() {
       {/* Article grid (white) */}
       <div className="bg-white">
         <div className="max-w-7xl mx-auto px-6 py-12">
-          {loading ? (
+          {isLoading ? (
             <NewsCardSkeleton count={6} />
-          ) : error ? (
-            <ErrorMessage type={errorType} message={error} onRetry={retry} context="news" />
+          ) : isError ? (
+            <ErrorMessage
+              type={error?.response?.status ? 'server' : 'network'}
+              message={error?.message}
+              onRetry={refetch}
+              context="news"
+            />
           ) : !articles?.length ? (
             <ErrorMessage type="empty" context="news" />
           ) : (
@@ -112,9 +141,12 @@ export function NewsList() {
 export function ArticleDetail() {
   const { slug } = useParams()
 
-  const { data: article, loading, error, errorType, retry } = useFetch(`/api/news/${slug}/`)
+  const { data: article, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['article', slug],
+    queryFn: () => getArticle(slug),
+  })
 
-  if (loading) return (
+  if (isLoading) return (
     <div className="min-h-screen bg-gfc-900 flex items-center justify-center">
       <div className="text-center">
         <div className="text-gfc-lime font-black text-3xl animate-pulse mb-2">GFC</div>
@@ -123,8 +155,13 @@ export function ArticleDetail() {
     </div>
   )
 
-  if (error) return (
-    <ErrorMessage type={errorType} message={error} onRetry={retry} context="news" />
+  if (isError) return (
+    <ErrorMessage
+      type={error?.response?.status ? 'server' : 'network'}
+      message={error?.message}
+      onRetry={refetch}
+      context="news"
+    />
   )
 
   return (
@@ -173,9 +210,7 @@ export function ArticleDetail() {
             </p>
           </div>
 
-          <div className="text-gray-600 leading-relaxed text-base whitespace-pre-line">
-            {article.content}
-          </div>
+          <ArticleBody content={article.content} />
         </div>
       </div>
     </div>

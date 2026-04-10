@@ -9,7 +9,8 @@ export default function Contact() {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault()
     if (!form.name || !form.email || !form.message) {
       setStatus('error')
       setErrorMsg('Please fill in all fields.')
@@ -136,7 +137,7 @@ export default function Contact() {
               </div>
             )}
 
-            <div className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div>
                 <label className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2 block">Your Name</label>
                 <input type="text" name="name" value={form.name} onChange={handleChange} className={inputClass} placeholder="Hari Bahadur" />
@@ -150,7 +151,7 @@ export default function Contact() {
                 <textarea rows={5} name="message" value={form.message} onChange={handleChange} className={inputClass + ' resize-none'} placeholder="Your message..." />
               </div>
               <button
-                onClick={handleSubmit}
+                type="submit"
                 disabled={status === 'sending'}
                 className={`font-black text-xs uppercase tracking-widest py-4 transition-colors mt-1 ${status === 'sending'
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -160,7 +161,7 @@ export default function Contact() {
                 {status === 'sending' ? 'Sending...' : 'Send Message'}
               </button>
               <p className="text-gray-400 text-xs text-center">We'll respond within 48 hours.</p>
-            </div>
+            </form>
           </div>
         </div>
       </div>

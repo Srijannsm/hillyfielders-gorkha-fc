@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { getNews, getFixtures, getSponsors, getProgrammes, getGallery } from '../services/api'
 import SEO from '../components/SEO'
+import Lightbox from '../components/Lightbox'
 
 const MENS_SLUG = 'mens-senior'
 const WOMENS_SLUG = 'womens-u16'
@@ -57,17 +58,17 @@ function FixtureColumn({ label, slug, fixture, isLoading }) {
       ) : fixture ? (
         <>
           <div className="flex items-center gap-3">
-            <p className="text-white font-black uppercase text-sm md:text-base flex-1 text-right leading-tight">
+            <div className="text-white font-black uppercase text-sm md:text-base flex-1 text-right leading-tight">
               {fixture.home_team_name}
-              <p className="text-lime-300 text-[10px] mt-0.5 uppercase tracking-wide">({fixture.team_name})</p>
-            </p>
+              <span className="block text-lime-300 text-[10px] mt-0.5 uppercase tracking-wide">({fixture.team_name})</span>
+            </div>
             <span className="bg-gfc-lime text-gfc-900 font-black text-[10px] px-3 py-1.5 flex-shrink-0 tracking-widest">
               VS
             </span>
-            <p className="text-white font-black uppercase text-sm md:text-base flex-1 leading-tight">
+            <div className="text-white font-black uppercase text-sm md:text-base flex-1 leading-tight">
               {fixture.away_team_name}
-              <p className="text-lime-300 text-[10px] mt-0.5 uppercase tracking-wide">({fixture.team_name})</p>
-            </p>
+              <span className="block text-lime-300 text-[10px] mt-0.5 uppercase tracking-wide">({fixture.team_name})</span>
+            </div>
           </div>
           <div className="flex items-center justify-between">
             <div>
@@ -168,42 +169,9 @@ function ProgrammeCard({ programme, name, to, description, index }) {
   )
 }
 
-/* ── Gallery lightbox (homepage) ───────────────────────── */
-function PhotoLightbox({ photo, onClose }) {
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', handler)
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', handler)
-      document.body.style.overflow = ''
-    }
-  }, [onClose])
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={onClose}>
-      <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-        <button
-          onClick={onClose}
-          className="absolute -top-10 right-0 text-white/70 hover:text-gfc-lime transition-colors text-[10px] font-black uppercase tracking-widest flex items-center gap-2"
-        >
-          Close <span className="text-base leading-none">✕</span>
-        </button>
-        <div className="flex-1 overflow-hidden flex items-center justify-center bg-gfc-900">
-          <img src={photo.image} alt={photo.title} className="max-h-[75vh] max-w-full object-contain" />
-        </div>
-        <div className="bg-gfc-900 border-t border-gfc-700 px-5 py-4">
-          <p className="text-white font-black uppercase text-sm" style={{ fontFamily: 'Oswald, sans-serif' }}>{photo.title}</p>
-          {photo.caption && <p className="text-gray-400 text-xs mt-1">{photo.caption}</p>}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 /* ── Gallery glimpse (3×3 Instagram grid) ──────────────── */
 function GalleryGlimpse({ photos }) {
-  const [lightboxPhoto, setLightboxPhoto] = useState(null)
+  const [lightboxIndex, setLightboxIndex] = useState(null)
 
   if (!photos?.length) return null
 
@@ -230,12 +198,12 @@ function GalleryGlimpse({ photos }) {
 
         {/* 3×3 Instagram-style grid */}
         <div className="grid grid-cols-3 gap-1 md:gap-[3px]">
-          {gridPhotos.map((photo) => (
+          {gridPhotos.map((photo, idx) => (
             <div
               key={photo.id}
               className="relative overflow-hidden bg-gfc-800 cursor-pointer group"
               style={{ aspectRatio: '1 / 1' }}
-              onClick={() => setLightboxPhoto(photo)}
+              onClick={() => setLightboxIndex(idx)}
             >
               <img
                 src={photo.image}
@@ -271,8 +239,13 @@ function GalleryGlimpse({ photos }) {
         </div>
       </div>
 
-      {lightboxPhoto && (
-        <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
+      {lightboxIndex !== null && (
+        <Lightbox
+          photos={gridPhotos}
+          currentIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={setLightboxIndex}
+        />
       )}
     </section>
   )
@@ -291,7 +264,7 @@ export default function Home() {
     queryFn: () => getFixtures(WOMENS_SLUG, false),
   })
   const { data: sponsors } = useQuery({ queryKey: ['sponsors'], queryFn: getSponsors })
-  const { data: galleryPhotos } = useQuery({ queryKey: ['gallery-home'], queryFn: () => getGallery('') })
+  const { data: galleryPhotos } = useQuery({ queryKey: ['gallery'], queryFn: () => getGallery('') })
 
   return (
     <div>
@@ -454,7 +427,7 @@ export default function Home() {
       </section>
 
       {/* ── SPONSORS STRIP ──────────────────────────────── */}
-      {/* {sponsors?.length > 0 && (
+      {sponsors?.length > 0 && (
         <section className="bg-white py-12 px-6 border-t border-gray-100">
           <div className="max-w-7xl mx-auto">
             <p className="text-gray-300 text-[10px] font-black uppercase tracking-widest text-center mb-8">Club Partners</p>
@@ -464,14 +437,14 @@ export default function Home() {
                   {s.logo ? (
                     <img src={s.logo} alt={s.name} className="h-10 object-contain grayscale hover:grayscale-0 transition-all" />
                   ) : (
-                    <p className="text-gray-400 font-bold text-sm uppercase tracking-widest">{s.name}</p>
+                    <span className="text-gray-400 font-bold text-sm uppercase tracking-widest">{s.name}</span>
                   )}
                 </a>
               ))}
             </div>
           </div>
         </section>
-      )} */}
+      )}
 
       {/* ── STAY CONNECTED (light green) ───────────────────────── */}
       <section className="bg-gfc-lime py-24 px-6 relative overflow-hidden">

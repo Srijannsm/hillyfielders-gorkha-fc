@@ -1,5 +1,7 @@
 import { NavLink } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
+import { getDashboard } from '../services/adminApi'
 import {
   LayoutDashboard,
   Users,
@@ -10,21 +12,32 @@ import {
   Handshake,
   Settings2,
   LogOut,
+  Mail,
 } from 'lucide-react'
 
 const nav = [
-  { to: '/admin',           label: 'Dashboard',    icon: LayoutDashboard },
-  { to: '/admin/players',   label: 'Players',      icon: Users           },
-  { to: '/admin/teams',     label: 'Teams',        icon: Shield          },
-  { to: '/admin/fixtures',  label: 'Fixtures',     icon: CalendarDays    },
-  { to: '/admin/news',      label: 'News',         icon: Newspaper       },
-  { to: '/admin/gallery',   label: 'Gallery',      icon: Images          },
-  { to: '/admin/sponsors',  label: 'Sponsors',     icon: Handshake       },
-  { to: '/admin/club',      label: 'Club Profile', icon: Settings2       },
+  { to: '/admin',            label: 'Dashboard',    icon: LayoutDashboard, exact: true },
+  { to: '/admin/players',    label: 'Players',      icon: Users           },
+  { to: '/admin/teams',      label: 'Teams',        icon: Shield          },
+  { to: '/admin/fixtures',   label: 'Fixtures',     icon: CalendarDays    },
+  { to: '/admin/news',       label: 'News',         icon: Newspaper       },
+  { to: '/admin/gallery',    label: 'Gallery',      icon: Images          },
+  { to: '/admin/sponsors',   label: 'Sponsors',     icon: Handshake       },
+  { to: '/admin/enquiries',  label: 'Enquiries',    icon: Mail, badge: true },
+  { to: '/admin/club',       label: 'Club Profile', icon: Settings2       },
 ]
 
 export default function Sidebar({ open, onClose }) {
   const { logout, user } = useAuth()
+
+  const { data } = useQuery({
+    queryKey: ['admin-dashboard'],
+    queryFn: getDashboard,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  })
+
+  const unreadEnquiries = data?.enquiries_unread ?? 0
 
   return (
     <>
@@ -57,11 +70,11 @@ export default function Sidebar({ open, onClose }) {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-4 px-3">
-          {nav.map(({ to, label, icon: Icon }) => (
+          {nav.map(({ to, label, icon: Icon, exact, badge }) => (
             <NavLink
               key={to}
               to={to}
-              end={to === '/admin'}
+              end={exact}
               onClick={onClose}
               className={({ isActive }) => `
                 flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors
@@ -72,26 +85,23 @@ export default function Sidebar({ open, onClose }) {
               `}
             >
               <Icon size={16} strokeWidth={1.75} className="flex-shrink-0" />
-              {label}
+              <span className="flex-1">{label}</span>
+              {badge && unreadEnquiries > 0 && (
+                <span className="text-[10px] font-bold bg-[#a3e635] text-gray-900 px-1.5 py-0.5 rounded-full leading-none">
+                  {unreadEnquiries}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
 
         {/* User + Logout */}
         <div className="px-3 py-4 border-t border-white/5">
-          <div className="flex items-center gap-3 px-3 py-2 mb-1">
-            <div className="h-7 w-7 rounded-full bg-[#a3e635]/20 flex items-center justify-center">
-              <span className="text-[#a3e635] text-xs font-bold">
-                {user?.username?.[0]?.toUpperCase() ?? 'A'}
-              </span>
-            </div>
-            <span className="text-gray-300 text-sm truncate">{user?.username}</span>
-          </div>
           <button
             onClick={logout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:text-red-400 hover:bg-red-400/5 transition-colors"
           >
-            <span className="text-base w-5 text-center">↩</span>
+            <LogOut size={15} strokeWidth={1.75} />
             Sign Out
           </button>
         </div>

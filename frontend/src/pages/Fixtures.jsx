@@ -1,5 +1,6 @@
 import { useParams, useLocation } from 'react-router-dom'
-import useFetch from '../hooks/useFetch'
+import { useQuery } from '@tanstack/react-query'
+import { getTeamBySlug, getFixtures } from '../services/api'
 import TeamPageTabs from '../components/TeamPageTabs'
 import SEO from '../components/SEO'
 import FixtureSkeleton from '../components/skeletons/FixtureSkeleton'
@@ -89,16 +90,25 @@ export default function Fixtures() {
   const { pathname } = useLocation()
   const isResults = pathname.endsWith('/results')
 
-  // Teams data is optional — only used for the page header.
-  // If it fails, fixtures still load (partial failure).
-  const { data: teams, error: teamsError, retry: retryTeams } = useFetch('/api/players/teams/')
-  const team = teams?.find(t => t.slug === teamType)
+  // Team is optional — used only for the page header.
+  // If this fails, fixtures still display (partial failure is fine).
+  const { data: team, isError: teamError, refetch: retryTeam } = useQuery({
+    queryKey: ['team', teamType],
+    queryFn: () => getTeamBySlug(teamType),
+  })
 
-  const { data: fixtures, loading, error, errorType, retry } = useFetch(
-    `/api/fixtures/?team=${teamType}&completed=${isResults}`
-  )
+  const {
+    data: fixtures,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['fixtures', teamType, isResults],
+    queryFn: () => getFixtures(teamType, isResults),
+  })
 
-  if (loading) return (
+  if (isLoading) return (
     <div className="min-h-screen bg-white">
       <div className="bg-gfc-900 pt-10 pb-10 px-6">
         <div className="max-w-7xl mx-auto">
@@ -113,8 +123,13 @@ export default function Fixtures() {
     </div>
   )
 
-  if (error) return (
-    <ErrorMessage type={errorType} message={error} onRetry={retry} context="fixtures" />
+  if (isError) return (
+    <ErrorMessage
+      type={error?.response?.status ? 'server' : 'network'}
+      message={error?.message}
+      onRetry={refetch}
+      context="fixtures"
+    />
   )
 
   const grouped = fixtures?.reduce((acc, f) => {
@@ -151,12 +166,12 @@ export default function Fixtures() {
       <div className="bg-white min-h-screen">
         <div className="max-w-7xl mx-auto px-6 py-12">
 
-          {/* Partial failure — team header data failed but fixtures loaded */}
-          {teamsError && (
+          {/* Partial failure — team header failed but fixtures loaded fine */}
+          {teamError && (
             <div className="mb-6">
               <InlineError
                 message="Could not load team info."
-                onRetry={retryTeams}
+                onRetry={retryTeam}
               />
             </div>
           )}

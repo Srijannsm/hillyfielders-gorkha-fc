@@ -5,14 +5,16 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 
 const pageTitles = {
-  '/admin':          'Dashboard',
-  '/admin/players':  'Players & Staff',
-  '/admin/teams':    'Teams & Programmes',
-  '/admin/fixtures': 'Fixtures',
-  '/admin/news':     'News & Articles',
-  '/admin/gallery':  'Gallery',
-  '/admin/sponsors': 'Sponsors',
-  '/admin/club':     'Club Profile',
+  '/admin':             'Dashboard',
+  '/admin/players':     'Players & Staff',
+  '/admin/teams':       'Teams & Programmes',
+  '/admin/fixtures':    'Fixtures',
+  '/admin/news':        'News & Articles',
+  '/admin/gallery':     'Gallery',
+  '/admin/sponsors':    'Sponsors',
+  '/admin/club':        'Club Profile',
+  '/admin/enquiries':   'Enquiries',
+  '/admin/profile':     'My Profile',
 }
 
 export default function AdminLayout() {

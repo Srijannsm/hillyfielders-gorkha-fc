@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import useFetch from '../hooks/useFetch'
+import { useQuery } from '@tanstack/react-query'
+import { getGallery } from '../services/api'
 import SEO from '../components/SEO'
 import GallerySkeleton from '../components/skeletons/GallerySkeleton'
 import ErrorMessage from '../components/errors/ErrorMessage'
@@ -26,8 +27,12 @@ const BADGE_COLORS = {
 function PhotoCard({ photo, index, priority, onOpen }) {
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Open photo: ${photo.title}`}
       className="relative group cursor-pointer overflow-hidden bg-gfc-800 mb-3 break-inside-avoid"
       onClick={() => onOpen(index)}
+      onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onOpen(index)}
     >
       {/* Lazy-loaded image with blur-up placeholder */}
       <LazyImage
@@ -66,9 +71,13 @@ export default function Gallery() {
   const [activeCategory, setActiveCategory] = useState('')
   const [lightboxIndex,  setLightboxIndex]  = useState(null)
 
-  const { data: allPhotos, loading, error, errorType, retry } = useFetch('/api/gallery/')
+  // Shares cache with Home's gallery glimpse — ['gallery'] key is the same
+  const { data: allPhotos, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['gallery'],
+    queryFn: () => getGallery(''),
+  })
 
-  // Client-side category filter
+  // Client-side category filter — all photos downloaded once, filtered locally
   const photos = activeCategory
     ? allPhotos?.filter(p => p.category === activeCategory)
     : allPhotos
@@ -137,10 +146,15 @@ export default function Gallery() {
       {/* ── Masonry grid ── */}
       <div className="max-w-7xl mx-auto px-6 py-10">
 
-        {loading ? (
+        {isLoading ? (
           <GallerySkeleton count={8} />
-        ) : error ? (
-          <ErrorMessage type={errorType} message={error} onRetry={retry} context="gallery" />
+        ) : isError ? (
+          <ErrorMessage
+            type={error?.response?.status ? 'server' : 'network'}
+            message={error?.message}
+            onRetry={refetch}
+            context="gallery"
+          />
         ) : !photos?.length ? (
           <ErrorMessage type="empty" context="gallery" />
         ) : (

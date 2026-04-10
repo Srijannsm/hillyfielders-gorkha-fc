@@ -7,6 +7,7 @@ from gallery.admin_views import PhotoAdminViewSet
 from sponsors.admin_views import SponsorAdminViewSet
 from club.admin_views import ClubProfileAdminView
 from core.admin_dashboard import DashboardView
+from accounts.admin_views import EnquiryAdminViewSet, ProfileView
 
 router = DefaultRouter()
 router.register('players',      PlayerAdminViewSet,     basename='admin-players')
@@ -19,9 +20,11 @@ router.register('articles',     ArticleAdminViewSet,    basename='admin-articles
 router.register('categories',   CategoryAdminViewSet,   basename='admin-categories')
 router.register('photos',       PhotoAdminViewSet,      basename='admin-photos')
 router.register('sponsors',     SponsorAdminViewSet,    basename='admin-sponsors')
+router.register('enquiries',    EnquiryAdminViewSet,    basename='admin-enquiries')
 
 urlpatterns = [
-    path('dashboard/', DashboardView.as_view(), name='admin-dashboard'),
+    path('dashboard/', DashboardView.as_view(),  name='admin-dashboard'),
     path('club/',      ClubProfileAdminView.as_view(), name='admin-club'),
+    path('profile/',   ProfileView.as_view(),    name='admin-profile'),
     path('',           include(router.urls)),
 ]

@@ -6,7 +6,7 @@ class ArticleListView(generics.ListAPIView):
     serializer_class = ArticleListSerializer
 
     def get_queryset(self):
-        return Article.objects.filter(is_published=True)
+        return Article.objects.filter(is_published=True).select_related('category', 'author')
 
 class ArticleDetailView(generics.RetrieveAPIView):
     queryset = Article.objects.filter(is_published=True)

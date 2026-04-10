@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getAdminFixtures, createFixture, updateFixture, deleteFixture,
@@ -8,12 +8,9 @@ import {
 import DataTable from '../components/DataTable'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
+import { Search, X } from 'lucide-react'
 
 function FixtureForm({ initial = {}, teams = [], competitions = [], onSave, onClose }) {
-  // our_name  = display name for us   (e.g. "HillyFielders Gorkha FC")
-  // opponent  = display name for them (e.g. "Pokhara FC")
-  // our_score / opp_score are always from our perspective.
-  // On submit we map to home_team_name/away_team_name/home_score/away_score via is_home_game.
   const isHome = initial.is_home_game ?? true
   const [f, setF] = useState({
     our_team:     initial.our_team    ?? '',
@@ -29,7 +26,6 @@ function FixtureForm({ initial = {}, teams = [], competitions = [], onSave, onCl
   })
   const [saving, setSaving] = useState(false)
 
-  // One-click fix for records where names/scores were entered the wrong way round
   function swap() {
     setF(p => ({
       ...p,
@@ -76,7 +72,7 @@ function FixtureForm({ initial = {}, teams = [], competitions = [], onSave, onCl
               if (!genderTeams.length) return null
               return (
                 <optgroup key={gender} label={gender === 'mens' ? "Men's" : "Women's"}>
-                  {genderTeams.map(t => <option key={t.id} value={t.id}>{t.programme_gender=== 'mens' ? "Men's" : "Women's"}-{t.name}</option>)}
+                  {genderTeams.map(t => <option key={t.id} value={t.id}>{t.programme_gender === 'mens' ? "Men's" : "Women's"}-{t.name}</option>)}
                 </optgroup>
               )
             })}
@@ -109,7 +105,6 @@ function FixtureForm({ initial = {}, teams = [], competitions = [], onSave, onCl
         </div>
       </div>
 
-      {/* Score — always Our Club vs Opponent, never ambiguous */}
       <div className="bg-gray-50 rounded-xl p-4 space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Score</p>
@@ -191,6 +186,11 @@ export default function Fixtures() {
   const [modal, setModal] = useState(null)
   const [toDelete, setToDelete] = useState(null)
 
+  const [search, setSearch] = useState('')
+  const [teamFilter, setTeamFilter] = useState('all')
+  const [competitionFilter, setCompetitionFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
+
   const { data: fixtures     = [], isLoading: loadingF } = useQuery({ queryKey: ['admin-fixtures'],     queryFn: getAdminFixtures     })
   const { data: competitions = [], isLoading: loadingC } = useQuery({ queryKey: ['admin-competitions'], queryFn: getAdminCompetitions })
   const { data: teams        = [] }                       = useQuery({ queryKey: ['admin-teams'],        queryFn: getAdminTeams        })
@@ -212,6 +212,26 @@ export default function Fixtures() {
     setToDelete(null)
   }
 
+  const filteredFixtures = useMemo(() => {
+    let data = fixtures
+    if (teamFilter !== 'all')        data = data.filter(f => String(f.our_team) === teamFilter)
+    if (competitionFilter !== 'all') data = data.filter(f => String(f.competition) === competitionFilter)
+    if (statusFilter === 'upcoming') data = data.filter(f => !f.is_completed)
+    if (statusFilter === 'played')   data = data.filter(f => f.is_completed)
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      data = data.filter(f =>
+        f.home_team_name?.toLowerCase().includes(q) ||
+        f.away_team_name?.toLowerCase().includes(q) ||
+        f.venue?.toLowerCase().includes(q) ||
+        f.competition_name?.toLowerCase().includes(q)
+      )
+    }
+    return data
+  }, [fixtures, teamFilter, competitionFilter, statusFilter, search])
+
+  const hasActiveFilters = teamFilter !== 'all' || competitionFilter !== 'all' || statusFilter !== 'all' || search.trim()
+
   const fixtureCols = [
     { key: 'match', label: 'Match', render: r => `${r.home_team_name} vs ${r.away_team_name}` },
     { key: 'team_name', label: 'Team', render: r => {
@@ -224,7 +244,7 @@ export default function Fixtures() {
         </span>
       )
     }},
-    { key: 'competition_name', label: 'Competition' },
+    { key: 'competition_name', label: 'Competition', render: r => r.competition_name || <span className="text-gray-300">—</span> },
     { key: 'date',             label: 'Date', render: r => new Date(r.date).toLocaleDateString() },
     { key: 'result',           label: 'Result', render: r => r.result
       ? <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${RESULT_BADGE[r.result]}`}>{r.result}</span>
@@ -243,8 +263,9 @@ export default function Fixtures() {
   ]
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4">
+      {/* Tab row */}
+      <div className="flex items-center justify-between gap-3">
         <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
           {['fixtures', 'competitions'].map(t => (
             <button key={t} onClick={() => setTab(t)}
@@ -258,8 +279,80 @@ export default function Fixtures() {
         </button>
       </div>
 
+      {/* Filter bar — fixtures only */}
+      {tab === 'fixtures' && (
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Search */}
+          <div className="relative" style={{ width: '200px' }}>
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search teams, venue…"
+              className="input"
+              style={{ paddingLeft: '2rem', paddingTop: '0.375rem', paddingBottom: '0.375rem', fontSize: '0.8125rem' }}
+            />
+          </div>
+
+          {/* Team */}
+          <div style={{ width: '168px' }}>
+            <select value={teamFilter} onChange={e => setTeamFilter(e.target.value)}
+              className="input" style={{ paddingTop: '0.375rem', paddingBottom: '0.375rem', fontSize: '0.8125rem' }}>
+              <option value="all">All Teams</option>
+              {['mens', 'womens'].map(gender => {
+                const gts = teams.filter(t => t.programme_gender === gender)
+                if (!gts.length) return null
+                return (
+                  <optgroup key={gender} label={gender === 'mens' ? "Men's" : "Women's"}>
+                    {gts.map(t => (
+                      <option key={t.id} value={t.id}>
+                        {t.programme_gender === 'mens' ? "Men's" : "Women's"}-{t.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )
+              })}
+            </select>
+          </div>
+
+          {/* Competition */}
+          <div style={{ width: '168px' }}>
+            <select value={competitionFilter} onChange={e => setCompetitionFilter(e.target.value)}
+              className="input" style={{ paddingTop: '0.375rem', paddingBottom: '0.375rem', fontSize: '0.8125rem' }}>
+              <option value="all">All Competitions</option>
+              {competitions.map(c => (
+                <option key={c.id} value={c.id}>{c.name} ({c.season})</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status */}
+          <div style={{ width: '120px' }}>
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+              className="input" style={{ paddingTop: '0.375rem', paddingBottom: '0.375rem', fontSize: '0.8125rem' }}>
+              <option value="all">All Status</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="played">Played</option>
+            </select>
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={() => { setTeamFilter('all'); setCompetitionFilter('all'); setStatusFilter('all'); setSearch('') }}
+              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap"
+            >
+              <X size={12} /> Clear
+            </button>
+          )}
+
+          <span className="text-xs text-gray-400 ml-auto whitespace-nowrap">
+            {filteredFixtures.length} of {fixtures.length}
+          </span>
+        </div>
+      )}
+
       {tab === 'fixtures' ? (
-        <DataTable columns={fixtureCols} data={fixtures} loading={loadingF}
+        <DataTable columns={fixtureCols} data={filteredFixtures} loading={loadingF}
           onEdit={item => setModal({ type: 'fixtures', item })}
           onDelete={item => setToDelete({ type: 'fixture', item })} />
       ) : (
