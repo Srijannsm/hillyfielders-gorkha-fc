@@ -5,8 +5,7 @@ from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
 from core.contact import ContactView
 from core.sitemaps import StaticSitemap, ArticleSitemap, TeamSitemap
-from accounts.views import CustomTokenObtainPairView
-from rest_framework_simplejwt.views import TokenRefreshView
+from accounts.cookie_views import CookieLoginView, CookieRefreshView, LogoutView
 
 sitemaps = {
     'static': StaticSitemap,
@@ -18,9 +17,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='sitemap'),
 
-    # JWT auth
-    path('api/auth/login/', CustomTokenObtainPairView.as_view(), name='token_obtain'),
-    path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # JWT auth (httpOnly cookie-based)
+    path('api/auth/login/',   CookieLoginView.as_view(),   name='token_obtain'),
+    path('api/auth/refresh/', CookieRefreshView.as_view(), name='token_refresh'),
+    path('api/auth/logout/',  LogoutView.as_view(),        name='token_logout'),
 
     # Public API
     path('api/players/', include('players.urls')),

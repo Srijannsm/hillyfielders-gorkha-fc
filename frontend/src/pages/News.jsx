@@ -11,8 +11,23 @@ import LazyImage from '../components/LazyImage'
 // Configure marked: safe defaults, GFM enabled
 marked.setOptions({ gfm: true, breaks: true })
 
+const DOMPURIFY_CONFIG = {
+  ALLOWED_TAGS: [
+    'p', 'br', 'strong', 'em', 'b', 'i', 'u', 's',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'ul', 'ol', 'li',
+    'a', 'blockquote', 'code', 'pre',
+    'img', 'figure', 'figcaption',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    'hr', 'del',
+  ],
+  ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel', 'width', 'height'],
+  ALLOW_DATA_ATTR: false,
+  FORCE_BODY: true,
+}
+
 function ArticleBody({ content }) {
-  const html = DOMPurify.sanitize(marked.parse(content || ''))
+  const html = DOMPurify.sanitize(marked.parse(content || ''), DOMPURIFY_CONFIG)
   return (
     <div
       className="prose prose-gray max-w-none text-gray-600 leading-relaxed

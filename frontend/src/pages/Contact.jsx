@@ -140,15 +140,15 @@ export default function Contact() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div>
                 <label className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2 block">Your Name</label>
-                <input type="text" name="name" value={form.name} onChange={handleChange} className={inputClass} placeholder="Hari Bahadur" />
+                <input type="text" name="name" value={form.name} onChange={handleChange} className={inputClass} placeholder="Hari Bahadur" required maxLength={100} />
               </div>
               <div>
                 <label className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2 block">Email Address</label>
-                <input type="email" name="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="hari@example.com" />
+                <input type="email" name="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="hari@example.com" required maxLength={254} />
               </div>
               <div>
                 <label className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2 block">Message</label>
-                <textarea rows={5} name="message" value={form.message} onChange={handleChange} className={inputClass + ' resize-none'} placeholder="Your message..." />
+                <textarea rows={5} name="message" value={form.message} onChange={handleChange} className={inputClass + ' resize-none'} placeholder="Your message..." required maxLength={2000} />
               </div>
               <button
                 type="submit"

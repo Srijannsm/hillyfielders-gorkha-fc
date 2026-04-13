@@ -1,3 +1,4 @@
+import logging
 import threading
 from rest_framework import viewsets, serializers, status
 from rest_framework.views import APIView
@@ -9,6 +10,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from .models import Enquiry
 
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
@@ -17,7 +19,7 @@ User = get_user_model()
 class EnquirySerializer(serializers.ModelSerializer):
     class Meta:
         model = Enquiry
-        fields = '__all__'
+        fields = ['id', 'name', 'email', 'message', 'is_read', 'created_at']
 
 
 class EnquiryAdminViewSet(viewsets.ModelViewSet):
@@ -63,10 +65,10 @@ class EnquiryAdminViewSet(viewsets.ModelViewSet):
                     message=message,
                     from_email=contact_email,
                     recipient_list=[enquiry.email],
-                    fail_silently=True,
+                    fail_silently=False,
                 )
             except Exception:
-                pass
+                logger.exception('Failed to send reply email to %s for enquiry #%s', enquiry.email, enquiry.pk)
 
         threading.Thread(target=_send, daemon=True).start()
         return Response({'status': 'sent'})
@@ -112,7 +114,27 @@ class ProfileView(APIView):
         return Response(serializer.data)
 
     def patch(self, request):
+        password_being_changed = bool(request.data.get('new_password', '').strip())
         serializer = ProfileSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        user = serializer.save()
+
+        if password_being_changed and user.email:
+            def _notify():
+                try:
+                    send_mail(
+                        subject='Your Gorkha FC admin password was changed',
+                        message=(
+                            f'Hi {user.get_full_name() or user.username},\n\n'
+                            'Your admin account password was just changed.\n\n'
+                            'If you did not make this change, contact your system administrator immediately.'
+                        ),
+                        from_email=settings.EMAIL_HOST_USER,
+                        recipient_list=[user.email],
+                        fail_silently=False,
+                    )
+                except Exception:
+                    logger.exception('Failed to send password-change notification to %s', user.email)
+            threading.Thread(target=_notify, daemon=True).start()
+
         return Response(serializer.data)

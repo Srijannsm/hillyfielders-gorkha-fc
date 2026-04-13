@@ -131,6 +131,7 @@ CORS_ALLOWED_ORIGINS = os.getenv(
     'CORS_ALLOWED_ORIGINS',
     'http://localhost:5173,http://localhost:3000'
 ).split(',')
+CORS_ALLOW_CREDENTIALS = True
 
 # ── Security headers (production only) ───────────────────────────────────────
 if not DEBUG:
@@ -146,15 +147,20 @@ if not DEBUG:
 # ── Django REST Framework ─────────────────────────────────────────────────────
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'accounts.cookie_auth.CookieJWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+    ],
     'DEFAULT_THROTTLE_RATES': {
         'contact': '5/hour',
+        'login':   '10/hour',
+        'anon':    '200/day',
     },
 }
 
@@ -166,12 +172,19 @@ SIMPLE_JWT = {
 
 # ── Celery ───────────────────────────────────────────────────────────────────
 _redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
-CELERY_BROKER_URL       = _redis_url
-CELERY_RESULT_BACKEND   = _redis_url
-CELERY_ACCEPT_CONTENT   = ['json']
-CELERY_TASK_SERIALIZER  = 'json'
+if not os.getenv('REDIS_URL') and not DEBUG:
+    import warnings
+    warnings.warn(
+        'REDIS_URL is not set. Celery tasks will run inline (blocking). '
+        'Set REDIS_URL in production for proper async task handling.',
+        stacklevel=2,
+    )
+CELERY_BROKER_URL        = _redis_url
+CELERY_RESULT_BACKEND    = _redis_url
+CELERY_ACCEPT_CONTENT    = ['json']
+CELERY_TASK_SERIALIZER   = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE         = TIME_ZONE
+CELERY_TIMEZONE          = TIME_ZONE
 # No REDIS_URL → run tasks inline (dev without Redis)
 CELERY_TASK_ALWAYS_EAGER = not bool(os.getenv('REDIS_URL'))
 
@@ -180,6 +193,42 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER   = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_USER     = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = (os.getenv('EMAIL_HOST_PASSWORD') or '').replace(' ', '')
-CONTACT_EMAIL     = os.getenv('CONTACT_EMAIL')
+CONTACT_EMAIL       = os.getenv('CONTACT_EMAIL')
+
+# ── Auth cookies ──────────────────────────────────────────────────────────────
+# httpOnly JWT cookies — set by accounts/cookie_views.py
+AUTH_COOKIE_SECURE   = not DEBUG          # HTTPS-only in production
+AUTH_COOKIE_SAMESITE = 'Strict'
+
+# ── Sentry (optional — only active when SENTRY_DSN env var is set) ────────────
+_sentry_dsn = os.getenv('SENTRY_DSN')
+if _sentry_dsn:
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=_sentry_dsn,
+            traces_sample_rate=0.1,
+            environment='production' if not DEBUG else 'development',
+        )
+    except ImportError:
+        pass  # sentry-sdk not installed — silently skip
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler'},
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'core':     {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'accounts': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'news':     {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+    },
+}

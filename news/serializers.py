@@ -56,5 +56,18 @@ class ArticleAdminSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         # Auto-generate slug from title if not provided
         if not attrs.get('slug') and attrs.get('title'):
-            attrs['slug'] = slugify(attrs['title'])
+            base = slugify(attrs['title'])
+            slug = base
+            # Exclude current instance when checking for collisions on update
+            qs = Article.objects.filter(slug=slug)
+            if self.instance:
+                qs = qs.exclude(pk=self.instance.pk)
+            n = 1
+            while qs.exists():
+                slug = f'{base}-{n}'
+                qs = Article.objects.filter(slug=slug)
+                if self.instance:
+                    qs = qs.exclude(pk=self.instance.pk)
+                n += 1
+            attrs['slug'] = slug
         return attrs

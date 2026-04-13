@@ -17,7 +17,7 @@ class PhotoSerializer(serializers.ModelSerializer):
         ]
 
     def get_alt(self, obj):
-        return obj.caption or ''
+        return obj.caption or obj.title or 'Hillyfielders Gorkha FC photo'
 
 
 class PhotoAdminSerializer(serializers.ModelSerializer):

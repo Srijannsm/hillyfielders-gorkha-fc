@@ -1,18 +1,13 @@
 import axios from 'axios'
 
-const TOKEN_KEY   = 'gfc_admin_access'
-const REFRESH_KEY = 'gfc_admin_refresh'
+const USER_KEY = 'gfc_user'
 
-const adminApi = axios.create({ baseURL: '/api/admin' })
-
-// Attach JWT token to every request
-adminApi.interceptors.request.use(config => {
-  const token = localStorage.getItem(TOKEN_KEY)
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  return config
+const adminApi = axios.create({
+  baseURL: '/api/admin',
+  withCredentials: true,  // send httpOnly auth cookies on every request
 })
 
-// Auto-refresh on 401
+// Auto-refresh on 401 — the refresh endpoint reads the gfc_refresh cookie
 adminApi.interceptors.response.use(
   res => res,
   async err => {
@@ -20,14 +15,12 @@ adminApi.interceptors.response.use(
     if (err.response?.status === 401 && !original._retry) {
       original._retry = true
       try {
-        const refresh = localStorage.getItem(REFRESH_KEY)
-        const { data } = await axios.post('/api/auth/refresh/', { refresh })
-        localStorage.setItem(TOKEN_KEY, data.access)
-        original.headers.Authorization = `Bearer ${data.access}`
+        await axios.post('/api/auth/refresh/', {}, { withCredentials: true })
+        // New gfc_access cookie is now set — retry the original request
         return adminApi(original)
       } catch {
-        localStorage.removeItem(TOKEN_KEY)
-        localStorage.removeItem(REFRESH_KEY)
+        // Refresh token also expired — send user back to login
+        localStorage.removeItem(USER_KEY)
         window.location.href = '/admin/login'
       }
     }

@@ -9,8 +9,13 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      '/api': 'http://127.0.0.1:8000'
-    }
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        // Rewrite cookie domain so httpOnly auth cookies work in development
+        cookieDomainRewrite: 'localhost',
+      },
+    },
   },
   build: {
     // Inline assets smaller than 4 KB as base64 (saves round-trips for tiny icons)

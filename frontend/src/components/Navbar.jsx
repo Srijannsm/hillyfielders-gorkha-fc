@@ -241,7 +241,7 @@ export default function Navbar() {
         </div>
 
         {/* Mobile burger */}
-        <button className="md:hidden text-white py-3 px-1" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
+        <button className="md:hidden text-white py-3 px-1" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu" aria-expanded={menuOpen}>
           <div className="flex flex-col gap-1.5 w-6">
             <span className={`block h-0.5 bg-current transition-all ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
             <span className={`block h-0.5 bg-current transition-all ${menuOpen ? 'opacity-0' : ''}`} />

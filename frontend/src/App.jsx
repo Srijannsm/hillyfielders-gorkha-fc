@@ -18,6 +18,7 @@ const Sponsors      = lazy(() => import('./pages/Sponsors'))
 const Contact       = lazy(() => import('./pages/Contact'))
 const Gallery       = lazy(() => import('./pages/Gallery'))
 const About         = lazy(() => import('./pages/About'))
+const NotFound      = lazy(() => import('./pages/NotFound'))
 
 // Admin area — separate chunk, only loaded when /admin is visited
 const AdminLayout    = lazy(() => import('./admin/layout/AdminLayout'))
@@ -77,6 +78,7 @@ function PublicSite() {
               <Route path="/academy" element={<ComingSoon page="Academy Programme" />} />
               <Route path="/mens" element={<ComingSoon page="Men's Programme" />} />
               <Route path="/womens" element={<ComingSoon page="Women's Programme" />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
         </PageTransition>

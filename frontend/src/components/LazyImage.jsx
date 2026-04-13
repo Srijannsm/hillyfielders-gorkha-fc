@@ -88,6 +88,11 @@ export default function LazyImage({
   return (
     <div ref={containerRef} className={containerClass} style={containerStyle}>
 
+      {/* Skeleton shimmer — shown while loading in absolute modes without a thumbnail */}
+      {useAbsolute && !loaded && !thumbnail && (
+        <div aria-hidden="true" className="absolute inset-0 bg-gray-800 animate-pulse" />
+      )}
+
       {/* Blur-up placeholder — only when we can size the container (absolute modes) */}
       {thumbnail && useAbsolute && (
         <img

@@ -12,7 +12,7 @@ class Competition(models.Model):
 class Fixture(models.Model):
     home_team_name = models.CharField(max_length=100)
     away_team_name = models.CharField(max_length=100)
-    our_team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    our_team = models.ForeignKey(Team, on_delete=models.PROTECT)
     competition = models.ForeignKey(Competition, on_delete=models.SET_NULL, null=True)
     date = models.DateTimeField()
     venue = models.CharField(max_length=200, blank=True)
