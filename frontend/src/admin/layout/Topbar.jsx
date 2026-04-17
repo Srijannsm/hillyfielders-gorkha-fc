@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from '../context/AuthContext'
+import { useAuth, canAccess } from '../context/AuthContext'
 import { getDashboard, markEnquiryRead, markAllEnquiriesRead } from '../services/adminApi'
 import { Bell, User, LogOut, ChevronDown, CheckCheck, MailOpen } from 'lucide-react'
 
@@ -41,9 +41,18 @@ export default function Topbar({ title, onMenuClick }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Username: JWT now includes it; falls back gracefully
+  const canSeeEnquiries = canAccess(user, 'secretary')
+
   const displayName = user?.username ?? 'Admin'
   const initial = displayName[0]?.toUpperCase() ?? 'A'
+
+  const roleLabels = {
+    media_officer: 'Media Officer',
+    team_manager:  'Team Manager',
+    secretary:     'Secretary',
+    coach:         'Coach',
+  }
+  const roleLabel = user?.isSuperAdmin ? 'Super Admin' : (roleLabels[user?.role] ?? 'Staff')
 
   function handleLogout() {
     setUserOpen(false)
@@ -69,8 +78,8 @@ export default function Topbar({ title, onMenuClick }) {
       {/* Right side controls */}
       <div className="flex items-center gap-1 flex-shrink-0">
 
-        {/* Notification bell */}
-        <div className="relative" ref={notifRef}>
+        {/* Notification bell — only for roles with enquiry access */}
+        {canSeeEnquiries && <div className="relative" ref={notifRef}>
           <button
             onClick={() => { setNotifOpen(o => !o); setUserOpen(false) }}
             className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
@@ -146,7 +155,7 @@ export default function Topbar({ title, onMenuClick }) {
               </div>
             </div>
           )}
-        </div>
+        </div>}
 
         {/* User avatar dropdown */}
         <div className="relative" ref={userRef}>
@@ -165,7 +174,7 @@ export default function Topbar({ title, onMenuClick }) {
             <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl border border-gray-200 shadow-lg z-50 overflow-hidden">
               <div className="px-4 py-3 border-b border-gray-100">
                 <p className="text-sm font-semibold text-gray-800 truncate">{displayName}</p>
-                <p className="text-xs text-gray-400">Administrator</p>
+                <p className="text-xs text-gray-400">{roleLabel}</p>
               </div>
               <div className="py-1">
                 <Link

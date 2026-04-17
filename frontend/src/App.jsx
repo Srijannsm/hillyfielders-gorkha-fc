@@ -33,6 +33,7 @@ const AdminSponsors  = lazy(() => import('./admin/pages/Sponsors'))
 const ClubProfile    = lazy(() => import('./admin/pages/ClubProfile'))
 const Enquiries      = lazy(() => import('./admin/pages/Enquiries'))
 const AdminProfile   = lazy(() => import('./admin/pages/Profile'))
+const AdminUsers     = lazy(() => import('./admin/pages/Users'))
 
 function ComingSoon({ page }) {
   return (
@@ -108,6 +109,7 @@ export default function App() {
             <Route path="club"      element={<ClubProfile />} />
             <Route path="enquiries" element={<Enquiries />} />
             <Route path="profile"   element={<AdminProfile />} />
+            <Route path="users"     element={<AdminUsers />} />
           </Route>
 
           {/* Public site — has Navbar/Footer */}

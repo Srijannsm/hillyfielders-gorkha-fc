@@ -6,6 +6,7 @@ export default function Login() {
   const { login, user } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ username: '', password: '' })
+  const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -16,10 +17,11 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      await login(form.username, form.password)
+      await login(form.username, form.password, rememberMe)
       navigate('/admin', { replace: true })
     } catch (err) {
-      setError(err.response?.data?.detail ?? 'Invalid credentials')
+      const data = err.response?.data
+      setError(data?.error ?? data?.detail ?? 'Invalid credentials.')
     } finally {
       setLoading(false)
     }
@@ -64,6 +66,23 @@ export default function Login() {
             />
           </div>
 
+          {/* Keep me signed in */}
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <div
+              onClick={() => setRememberMe(r => !r)}
+              className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                rememberMe ? 'bg-[#a3e635] border-[#a3e635]' : 'border-white/20 bg-transparent'
+              }`}
+            >
+              {rememberMe && (
+                <svg className="w-2.5 h-2.5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+            <span className="text-xs text-gray-400">Keep me signed in for 7 days</span>
+          </label>
+
           {error && (
             <p className="text-red-400 text-sm text-center">{error}</p>
           )}
@@ -76,6 +95,10 @@ export default function Login() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        <p className="text-center text-gray-600 text-[11px] mt-5">
+          Session ends when you close your browser unless you opt in above.
+        </p>
       </div>
     </div>
   )

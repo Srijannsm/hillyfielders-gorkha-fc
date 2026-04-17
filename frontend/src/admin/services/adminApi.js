@@ -106,4 +106,10 @@ export const deleteEnquiry       = id => adminApi.delete(`/enquiries/${id}/`)
 export const getAdminProfile     = () => adminApi.get('/profile/').then(r => r.data)
 export const updateAdminProfile  = data => adminApi.patch('/profile/', data).then(r => r.data)
 
+// User Management (Super Admin only)
+export const getAdminUsers       = () => adminApi.get('/users/').then(results)
+export const createAdminUser     = data => adminApi.post('/users/', data).then(r => r.data)
+export const updateAdminUser     = (id, data) => adminApi.patch(`/users/${id}/`, data).then(r => r.data)
+export const deleteAdminUser     = id => adminApi.delete(`/users/${id}/`)
+
 export default adminApi

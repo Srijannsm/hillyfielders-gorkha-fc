@@ -6,9 +6,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
         # Embed user details so the frontend can read them without a separate request
-        token['username']   = user.username
-        token['email']      = user.email
-        token['first_name'] = user.first_name
-        token['last_name']  = user.last_name
-        token['is_staff']   = user.is_staff
+        token['username']     = user.username
+        token['email']        = user.email
+        token['first_name']   = user.first_name
+        token['last_name']    = user.last_name
+        token['is_staff']     = user.is_staff
+        token['is_superuser'] = user.is_superuser
+        token['role']         = getattr(getattr(user, 'profile', None), 'role', None)
         return token

@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { useAuth } from '../context/AuthContext'
+import { useAuth, canAccess } from '../context/AuthContext'
 import { getDashboard } from '../services/adminApi'
 import {
   LayoutDashboard,
@@ -13,18 +13,20 @@ import {
   Settings2,
   LogOut,
   Mail,
+  UserCog,
 } from 'lucide-react'
 
 const nav = [
-  { to: '/admin',            label: 'Dashboard',    icon: LayoutDashboard, exact: true },
-  { to: '/admin/players',    label: 'Players',      icon: Users           },
-  { to: '/admin/teams',      label: 'Teams',        icon: Shield          },
-  { to: '/admin/fixtures',   label: 'Fixtures',     icon: CalendarDays    },
-  { to: '/admin/news',       label: 'News',         icon: Newspaper       },
-  { to: '/admin/gallery',    label: 'Gallery',      icon: Images          },
-  { to: '/admin/sponsors',   label: 'Sponsors',     icon: Handshake       },
-  { to: '/admin/enquiries',  label: 'Enquiries',    icon: Mail, badge: true },
-  { to: '/admin/club',       label: 'Club Profile', icon: Settings2       },
+  { to: '/admin',            label: 'Dashboard',    icon: LayoutDashboard, exact: true,  roles: null },
+  { to: '/admin/players',    label: 'Players',      icon: Users,                          roles: ['team_manager', 'coach'] },
+  { to: '/admin/teams',      label: 'Teams',        icon: Shield,                         roles: ['team_manager', 'coach'] },
+  { to: '/admin/fixtures',   label: 'Fixtures',     icon: CalendarDays,                   roles: ['team_manager', 'secretary', 'coach'] },
+  { to: '/admin/news',       label: 'News',         icon: Newspaper,                      roles: ['media_officer'] },
+  { to: '/admin/gallery',    label: 'Gallery',      icon: Images,                         roles: ['media_officer', 'coach'] },
+  { to: '/admin/sponsors',   label: 'Sponsors',     icon: Handshake,                      roles: ['secretary'] },
+  { to: '/admin/enquiries',  label: 'Enquiries',    icon: Mail,      badge: true,         roles: ['secretary'] },
+  { to: '/admin/club',       label: 'Club Profile', icon: Settings2,                      roles: ['secretary'] },
+  { to: '/admin/users',      label: 'Users',        icon: UserCog,   superOnly: true,     roles: null },
 ]
 
 export default function Sidebar({ open, onClose }) {
@@ -39,9 +41,14 @@ export default function Sidebar({ open, onClose }) {
 
   const unreadEnquiries = data?.enquiries_unread ?? 0
 
+  const visibleNav = nav.filter(item => {
+    if (item.superOnly) return user?.isSuperAdmin
+    if (item.roles === null) return true
+    return canAccess(user, ...item.roles)
+  })
+
   return (
     <>
-      {/* Overlay for mobile */}
       {open && (
         <div
           className="fixed inset-0 bg-black/50 z-20 lg:hidden"
@@ -70,7 +77,7 @@ export default function Sidebar({ open, onClose }) {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-4 px-3">
-          {nav.map(({ to, label, icon: Icon, exact, badge }) => (
+          {visibleNav.map(({ to, label, icon: Icon, exact, badge }) => (
             <NavLink
               key={to}
               to={to}

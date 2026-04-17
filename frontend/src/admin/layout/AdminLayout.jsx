@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth, canAccess } from '../context/AuthContext'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 
@@ -15,6 +15,22 @@ const pageTitles = {
   '/admin/club':        'Club Profile',
   '/admin/enquiries':   'Enquiries',
   '/admin/profile':     'My Profile',
+  '/admin/users':       'User Management',
+}
+
+// Map each route to the roles that may access it (null = all authenticated admins)
+const routeRoles = {
+  '/admin':           null,
+  '/admin/players':   ['team_manager', 'coach'],
+  '/admin/teams':     ['team_manager', 'coach'],
+  '/admin/fixtures':  ['team_manager', 'secretary', 'coach'],
+  '/admin/news':      ['media_officer'],
+  '/admin/gallery':   ['media_officer', 'coach'],
+  '/admin/sponsors':  ['secretary'],
+  '/admin/club':      ['secretary'],
+  '/admin/enquiries': ['secretary'],
+  '/admin/profile':   null,
+  '/admin/users':     '__superadmin__',
 }
 
 export default function AdminLayout() {
@@ -23,6 +39,14 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   if (!user) return <Navigate to="/admin/login" replace />
+
+  const allowedRoles = routeRoles[location.pathname]
+
+  if (allowedRoles === '__superadmin__') {
+    if (!user.isSuperAdmin) return <Navigate to="/admin" replace />
+  } else if (allowedRoles !== null && allowedRoles !== undefined) {
+    if (!canAccess(user, ...allowedRoles)) return <Navigate to="/admin" replace />
+  }
 
   const title = pageTitles[location.pathname] ?? 'Admin'
 

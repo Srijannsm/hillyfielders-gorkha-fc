@@ -24,17 +24,17 @@ class LoginRateThrottle(AnonRateThrottle):
     scope = 'login'
 
 
-def _set_auth_cookie(response, name, value, max_age):
-    """Helper: attach a JWT cookie with consistent security settings."""
-    response.set_cookie(
-        name,
-        value,
-        max_age=max_age,
+def _set_auth_cookie(response, name, value, max_age=None):
+    """Attach a JWT cookie. max_age=None → session cookie (expires when browser closes)."""
+    kwargs = dict(
         httponly=True,
         secure=getattr(settings, 'AUTH_COOKIE_SECURE', not settings.DEBUG),
         samesite=getattr(settings, 'AUTH_COOKIE_SAMESITE', 'Strict'),
         path='/',
     )
+    if max_age is not None:
+        kwargs['max_age'] = max_age
+    response.set_cookie(name, value, **kwargs)
 
 
 class CookieLoginView(APIView):
@@ -65,12 +65,24 @@ class CookieLoginView(APIView):
         # Decode payload (already validated by the serializer)
         payload = AccessToken(access_token).payload
 
+        remember_me = bool(request.data.get('remember_me', False))
+
         response = Response({
-            'username': payload.get('username', ''),
-            'is_staff': payload.get('is_staff', False),
+            'username':     payload.get('username', ''),
+            'is_staff':     payload.get('is_staff', False),
+            'is_superuser': payload.get('is_superuser', False),
+            'role':         payload.get('role', None),
         })
-        _set_auth_cookie(response, 'gfc_access',  access_token,  max_age=8 * 3600)
-        _set_auth_cookie(response, 'gfc_refresh', refresh_token, max_age=7 * 24 * 3600)
+
+        if remember_me:
+            # Persistent cookies: access 8 h, refresh 7 days
+            _set_auth_cookie(response, 'gfc_access',  access_token,  max_age=8 * 3600)
+            _set_auth_cookie(response, 'gfc_refresh', refresh_token, max_age=7 * 24 * 3600)
+        else:
+            # Session cookies: no max_age — expire when the browser closes
+            _set_auth_cookie(response, 'gfc_access',  access_token)
+            _set_auth_cookie(response, 'gfc_refresh', refresh_token)
+
         return response
 
 

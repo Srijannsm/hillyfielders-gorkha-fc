@@ -1,13 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser
 from rest_framework import status
+from accounts.permissions import role_permission
 from .models import ClubProfile
 from .serializers import ClubProfileSerializer
 
 
 class ClubProfileAdminView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [role_permission('secretary')]
 
     def get(self, request):
         profile = ClubProfile.get()
