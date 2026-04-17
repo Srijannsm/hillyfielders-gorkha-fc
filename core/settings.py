@@ -6,6 +6,7 @@ import os
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+REACT_DIST_DIR = BASE_DIR / 'frontend' / 'dist'
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production')
 
@@ -58,7 +59,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [REACT_DIST_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -105,6 +106,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 WHITENOISE_MAX_AGE = 31536000  # 1 year — safe for hashed Vite filenames
+
+if REACT_DIST_DIR.exists():
+    STATICFILES_DIRS = [REACT_DIST_DIR]
 
 # ── Media files ───────────────────────────────────────────────────────────────
 # In production: use Cloudinary. In development: local disk.
