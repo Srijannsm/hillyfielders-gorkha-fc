@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from core.soft_delete import SoftDeleteMixin
 
 User = get_user_model()
 
@@ -18,7 +19,7 @@ class UserProfile(models.Model):
         return f'{self.user.username} ({self.role})'
 
 
-class Enquiry(models.Model):
+class Enquiry(SoftDeleteMixin, models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
     message = models.TextField()

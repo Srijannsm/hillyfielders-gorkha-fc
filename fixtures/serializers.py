@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 from .models import Fixture, Competition
 
@@ -25,3 +26,12 @@ class FixtureSerializer(serializers.ModelSerializer):
             'home_score', 'away_score',
             'is_completed', 'result'
         ]
+
+    def validate(self, attrs):
+        date = attrs.get('date') or (self.instance.date if self.instance else None)
+        is_completed = attrs.get('is_completed', getattr(self.instance, 'is_completed', False))
+        if date and not is_completed and date < timezone.now():
+            raise serializers.ValidationError(
+                {'date': 'Cannot schedule an incomplete fixture in the past.'}
+            )
+        return attrs

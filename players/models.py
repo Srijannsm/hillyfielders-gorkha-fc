@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from core.soft_delete import SoftDeleteMixin
 
 
 class Programme(models.Model):
@@ -44,7 +45,7 @@ class Team(models.Model):
         return f"{self.programme.name} — {self.name}"
 
 
-class Player(models.Model):
+class Player(SoftDeleteMixin, models.Model):
     POSITION_CHOICES = [
         ('GK',  'Goalkeeper'),
         ('DEF', 'Defender'),
@@ -64,6 +65,9 @@ class Player(models.Model):
 
     class Meta:
         unique_together = [('team', 'jersey_number')]
+        indexes = [
+            models.Index(fields=['team', 'is_active']),
+        ]
 
     def __str__(self):
         return f"{self.jersey_number}. {self.name} ({self.get_position_display()})"

@@ -106,6 +106,7 @@ export default function Teams() {
   const [tab, setTab] = useState('teams')
   const [modal, setModal] = useState(null)
   const [toDelete, setToDelete] = useState(null)
+  const [deleteError, setDeleteError] = useState(null)
 
   const { data: teams = [],      isLoading: loadingT } = useQuery({ queryKey: ['admin-teams'],      queryFn: getAdminTeams      })
   const { data: programmes = [], isLoading: loadingPr } = useQuery({ queryKey: ['admin-programmes'], queryFn: getAdminProgrammes })
@@ -114,7 +115,7 @@ export default function Teams() {
 
   const createT  = useMutation({ mutationFn: createTeam,       onSuccess: inv })
   const updateT  = useMutation({ mutationFn: ([id, d]) => updateTeam(id, d),       onSuccess: inv })
-  const deleteT  = useMutation({ mutationFn: deleteTeam,       onSuccess: inv })
+  const deleteT  = useMutation({ mutationFn: deleteTeam, onSuccess: inv, onError: err => setDeleteError(err.response?.data?.detail ?? 'Delete failed.') })
   const createPr = useMutation({ mutationFn: createProgramme,  onSuccess: inv })
   const updatePr = useMutation({ mutationFn: ([id, d]) => updateProgramme(id, d),  onSuccess: inv })
   const deletePr = useMutation({ mutationFn: deleteProgramme,  onSuccess: inv })
@@ -187,6 +188,13 @@ export default function Teams() {
       <ConfirmDialog open={!!toDelete}
         message={`Delete "${toDelete?.item?.name}"? This cannot be undone.`}
         onConfirm={confirmDelete} onCancel={() => setToDelete(null)} />
+
+      {deleteError && (
+        <div className="fixed bottom-4 right-4 bg-red-600 text-white px-4 py-3 rounded shadow-lg max-w-sm z-50">
+          <p className="text-sm">{deleteError}</p>
+          <button className="text-xs underline mt-1" onClick={() => setDeleteError(null)}>Dismiss</button>
+        </div>
+      )}
     </div>
   )
 }

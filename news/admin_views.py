@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from accounts.permissions import role_permission
+from core.soft_delete import SoftDeleteAdminMixin
 from .models import Article, Category
 from .serializers import ArticleAdminSerializer, CategorySerializer
 
@@ -12,7 +13,7 @@ class CategoryAdminViewSet(viewsets.ModelViewSet):
     permission_classes = [_news_perm]
 
 
-class ArticleAdminViewSet(viewsets.ModelViewSet):
+class ArticleAdminViewSet(SoftDeleteAdminMixin, viewsets.ModelViewSet):
     """All articles (published + drafts) for admin management."""
     queryset = Article.objects.select_related('category', 'author').all()
     serializer_class = ArticleAdminSerializer

@@ -1,12 +1,29 @@
 import { useRef, useState } from 'react'
 
+const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+const MAX_BYTES = 50 * 1024 * 1024
+
 export default function ImageUpload({ name, label, currentUrl, onChange }) {
   const inputRef = useRef()
   const [preview, setPreview] = useState(null)
+  const [error, setError] = useState(null)
 
   function handleFile(e) {
     const file = e.target.files[0]
     if (!file) return
+
+    if (!ALLOWED_TYPES.has(file.type)) {
+      setError('Only JPG, PNG, WebP, and GIF images are allowed.')
+      e.target.value = ''
+      return
+    }
+    if (file.size > MAX_BYTES) {
+      setError('Image must be smaller than 50 MB.')
+      e.target.value = ''
+      return
+    }
+
+    setError(null)
     setPreview(URL.createObjectURL(file))
     onChange(file)
   }
@@ -37,11 +54,12 @@ export default function ImageUpload({ name, label, currentUrl, onChange }) {
           </div>
         )}
       </div>
+      {error && <p className="mt-1.5 text-sm text-red-600">{error}</p>}
       <input
         ref={inputRef}
         type="file"
         name={name}
-        accept="image/*"
+        accept=".jpg,.jpeg,.png,.webp,.gif"
         className="hidden"
         onChange={handleFile}
       />

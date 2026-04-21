@@ -5,8 +5,11 @@ import { getNews, getFixtures, getSponsors, getProgrammes, getGallery } from '..
 import SEO from '../components/SEO'
 import Lightbox from '../components/Lightbox'
 
-const MENS_SLUG = 'mens-senior'
-const WOMENS_SLUG = 'womens-u16'
+function slugToLabel(slug) {
+  const ageGroup = slug.split('-').slice(1).join('-')
+  if (ageGroup === 'senior') return 'Senior'
+  return ageGroup.replace(/^u(\d+)$/, 'U-$1')
+}
 
 /* ── News card ─────────────────────────────────────────── */
 function NewsCard({ article, featured = false }) {
@@ -45,15 +48,43 @@ function NewsCard({ article, featured = false }) {
 }
 
 /* ── Fixture column ─────────────────────────────────────── */
-function FixtureColumn({ label, slug, fixture, isLoading }) {
-  // console.log({fixture})
+function FixtureColumn({ label, teams }) {
+  const [selectedSlug, setSelectedSlug] = useState(null)
+  const activeSlug = selectedSlug ?? teams?.[0]?.slug ?? null
+
+  const { data: fixtures, isLoading } = useQuery({
+    queryKey: ['fixtures', activeSlug, 'upcoming'],
+    queryFn: () => getFixtures(activeSlug, false),
+    enabled: !!activeSlug,
+  })
+  const fixture = fixtures?.[0] ?? null
+
   return (
     <div className="flex-1 px-8 py-8 flex flex-col gap-5">
-      <div className="flex items-center gap-3">
-        <span className="w-1 h-5 bg-gfc-lime flex-shrink-0" />
-        <p className="text-gfc-lime text-[10px] font-black uppercase tracking-widest">{label}</p>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <span className="w-1 h-5 bg-gfc-lime flex-shrink-0" />
+          <p className="text-gfc-lime text-[10px] font-black uppercase tracking-widest">{label}</p>
+        </div>
+        {teams?.length > 0 && (
+          <div className="flex items-center gap-1 flex-wrap">
+            {teams.map(team => (
+              <button
+                key={team.slug}
+                onClick={() => setSelectedSlug(team.slug)}
+                className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 transition-colors ${
+                  activeSlug === team.slug
+                    ? 'bg-gfc-lime text-gfc-900'
+                    : 'text-gray-500 hover:text-white border border-gfc-700 hover:border-gray-500'
+                }`}
+              >
+                {slugToLabel(team.slug)}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-      {isLoading ? (
+      {!activeSlug || isLoading ? (
         <p className="text-gray-600 text-xs uppercase tracking-widest animate-pulse">Loading...</p>
       ) : fixture ? (
         <>
@@ -77,18 +108,18 @@ function FixtureColumn({ label, slug, fixture, isLoading }) {
                 {' · '}
                 {new Date(fixture.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
               </p>
-              {fixture.venue && <p className="text-gray-600 text-xs mt-0.5">{fixture.venue}</p>}
-              <p className="text-gray-600 text-[10px] mt-0.5 uppercase tracking-wide">{fixture.competition_name || 'Friendly'}</p>
+              {fixture.venue && <p className="text-gray-400 text-xs mt-0.5">{fixture.venue}</p>}
+              <p className="text-gray-400 text-[10px] mt-0.5 uppercase tracking-wide">{fixture.competition_name || 'Friendly'}</p>
             </div>
-            <Link to={`/${slug}/fixtures`} className="text-gfc-lime text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1.5 flex-shrink-0">
+            <Link to={`/${activeSlug}/fixtures`} className="text-gfc-lime text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1.5 flex-shrink-0">
               All Fixtures <span>→</span>
             </Link>
           </div>
         </>
       ) : (
         <div className="flex items-center justify-between">
-          <p className="text-gray-600 text-xs uppercase tracking-widest">No upcoming fixtures</p>
-          <Link to={`/${slug}/fixtures`} className="text-gfc-lime text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1.5">
+          <p className="text-gray-400 text-xs uppercase tracking-widest">No upcoming fixtures</p>
+          <Link to={`/${activeSlug}/fixtures`} className="text-gfc-lime text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1.5">
             Fixtures <span>→</span>
           </Link>
         </div>
@@ -97,13 +128,13 @@ function FixtureColumn({ label, slug, fixture, isLoading }) {
   )
 }
 
-function FixturesBand({ mensFixtures, womensFixtures, mensLoading, womensLoading }) {
+function FixturesBand({ mensTeams, womensTeams }) {
   return (
     <section className="bg-gfc-900 border-y border-gfc-700">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-gfc-700">
-          <FixtureColumn label="Men's" slug={MENS_SLUG} fixture={mensFixtures?.[0] ?? null} isLoading={mensLoading} />
-          <FixtureColumn label="Women's" slug={WOMENS_SLUG} fixture={womensFixtures?.[0] ?? null} isLoading={womensLoading} />
+          <FixtureColumn label="Men's" teams={mensTeams} />
+          <FixtureColumn label="Women's" teams={womensTeams} />
         </div>
       </div>
     </section>
@@ -255,16 +286,12 @@ function GalleryGlimpse({ photos }) {
 export default function Home() {
   const { data: news } = useQuery({ queryKey: ['news'], queryFn: getNews })
   const { data: programmes = [] } = useQuery({ queryKey: ['programmes'], queryFn: getProgrammes })
-  const { data: mensFixtures, isLoading: mensLoading } = useQuery({
-    queryKey: ['fixtures', MENS_SLUG, 'upcoming'],
-    queryFn: () => getFixtures(MENS_SLUG, false),
-  })
-  const { data: womensFixtures, isLoading: womensLoading } = useQuery({
-    queryKey: ['fixtures', WOMENS_SLUG, 'upcoming'],
-    queryFn: () => getFixtures(WOMENS_SLUG, false),
-  })
   const { data: sponsors } = useQuery({ queryKey: ['sponsors'], queryFn: getSponsors })
   const { data: galleryPhotos } = useQuery({ queryKey: ['gallery'], queryFn: () => getGallery('') })
+
+  const normProg = name => name.replace(/\s*programme$/i, '').trim().toLowerCase()
+  const mensTeams = programmes.find(p => normProg(p.name) === "men's")?.teams ?? []
+  const womensTeams = programmes.find(p => normProg(p.name) === "women's")?.teams ?? []
 
   return (
     <div>
@@ -274,7 +301,7 @@ export default function Home() {
       />
 
       {/* ── HERO ────────────────────────────────────────── */}
-      <section className="hero-bg min-h-screen flex flex-col justify-end relative overflow-hidden">
+      <section className="hero-bg min-h-[80vh] flex flex-col justify-end relative overflow-hidden">
         <div className="absolute right-0 top-0 bottom-0 w-1/2 flex items-center justify-end pr-8 pointer-events-none hidden lg:flex">
           <img src="/logo.png" alt="" className="w-[480px] h-[480px] object-contain opacity-[0.6]" onError={e => e.target.style.display = 'none'} />
         </div>
@@ -300,12 +327,7 @@ export default function Home() {
       </section>
 
       {/* ── FIXTURES ────────────────────────────────────── */}
-      <FixturesBand
-        mensFixtures={mensFixtures}
-        womensFixtures={womensFixtures}
-        mensLoading={mensLoading}
-        womensLoading={womensLoading}
-      />
+      <FixturesBand mensTeams={mensTeams} womensTeams={womensTeams} />
 
       {/* ── STATS STRIP ─────────────────────────────────── */}
       <section className="bg-gfc-lime">

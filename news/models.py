@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from core.soft_delete import SoftDeleteMixin
 
 class Category(models.Model):
     name = models.CharField(max_length=100)  # e.g. "Match Report", "Club News"
@@ -8,7 +9,7 @@ class Category(models.Model):
         return self.name
 
 
-class Article(models.Model):
+class Article(SoftDeleteMixin, models.Model):
     title = models.CharField(max_length=300)
     slug = models.SlugField(unique=True)  # URL-friendly version of title
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
@@ -21,6 +22,9 @@ class Article(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['is_published']),
+        ]
 
     def __str__(self):
         return self.title

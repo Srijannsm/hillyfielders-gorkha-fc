@@ -1,6 +1,7 @@
 import logging
-import threading
+from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, serializers, status
+from core.soft_delete import SoftDeleteAdminMixin
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
@@ -8,10 +9,10 @@ from rest_framework.decorators import action
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.core.mail import send_mail
 from django.conf import settings
 from .models import Enquiry, UserProfile
 from .permissions import IsSuperAdmin, role_permission
+from core.tasks import send_enquiry_reply, send_password_change_notification
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -25,7 +26,7 @@ class EnquirySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'email', 'message', 'is_read', 'created_at']
 
 
-class EnquiryAdminViewSet(viewsets.ModelViewSet):
+class EnquiryAdminViewSet(SoftDeleteAdminMixin, viewsets.ModelViewSet):
     queryset = Enquiry.objects.all()
     serializer_class = EnquirySerializer
     permission_classes = [role_permission('secretary')]
@@ -50,28 +51,10 @@ class EnquiryAdminViewSet(viewsets.ModelViewSet):
         if not message:
             return Response({'error': 'Reply message is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        sender = getattr(settings, 'EMAIL_HOST_USER', None)
-        contact_email = getattr(settings, 'CONTACT_EMAIL', sender)
-
-        if not sender:
+        if not getattr(settings, 'EMAIL_HOST_USER', None):
             return Response({'error': 'Email is not configured on this server.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        enquiry.is_read = True
-        enquiry.save(update_fields=['is_read'])
-
-        def _send():
-            try:
-                send_mail(
-                    subject='Re: Your enquiry to HillyFielders Gorkha FC',
-                    message=message,
-                    from_email=contact_email,
-                    recipient_list=[enquiry.email],
-                    fail_silently=False,
-                )
-            except Exception:
-                logger.exception('Failed to send reply email to %s for enquiry #%s', enquiry.email, enquiry.pk)
-
-        threading.Thread(target=_send, daemon=True).start()
+        send_enquiry_reply.delay(enquiry.pk, message)
         return Response({'status': 'sent'})
 
 
@@ -110,10 +93,12 @@ class ProfileSerializer(serializers.ModelSerializer):
 class ProfileView(APIView):
     permission_classes = [IsAdminUser]
 
+    @extend_schema(tags=['admin-users'], summary='Get own profile', responses={200: ProfileSerializer})
     def get(self, request):
         serializer = ProfileSerializer(request.user)
         return Response(serializer.data)
 
+    @extend_schema(tags=['admin-users'], summary='Update own profile', request=ProfileSerializer, responses={200: ProfileSerializer})
     def patch(self, request):
         password_being_changed = bool(request.data.get('new_password', '').strip())
         serializer = ProfileSerializer(request.user, data=request.data, partial=True)
@@ -121,22 +106,10 @@ class ProfileView(APIView):
         user = serializer.save()
 
         if password_being_changed and user.email:
-            def _notify():
-                try:
-                    send_mail(
-                        subject='Your Gorkha FC admin password was changed',
-                        message=(
-                            f'Hi {user.get_full_name() or user.username},\n\n'
-                            'Your admin account password was just changed.\n\n'
-                            'If you did not make this change, contact your system administrator immediately.'
-                        ),
-                        from_email=settings.EMAIL_HOST_USER,
-                        recipient_list=[user.email],
-                        fail_silently=False,
-                    )
-                except Exception:
-                    logger.exception('Failed to send password-change notification to %s', user.email)
-            threading.Thread(target=_notify, daemon=True).start()
+            send_password_change_notification.delay(
+                user.email,
+                user.get_full_name() or user.username,
+            )
 
         return Response(serializer.data)
 

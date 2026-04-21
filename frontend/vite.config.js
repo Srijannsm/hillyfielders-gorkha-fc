@@ -1,12 +1,25 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      exclude: ['node_modules/', 'src/test/', 'e2e/', 'dist/'],
+    },
+    exclude: ['node_modules', 'dist', 'e2e'],
+  },
   plugins: [
     react(),
     tailwindcss(),
-  ],
+    process.env.ANALYZE === 'true' && visualizer({ open: true, filename: 'dist/stats.html', gzipSize: true }),
+  ].filter(Boolean),
   server: {
     proxy: {
       '/api': {

@@ -26,6 +26,8 @@ INSTALLED_APPS = [
     # Third party
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'drf_spectacular',
     'corsheaders',
     'cloudinary',
     'cloudinary_storage',
@@ -156,7 +158,8 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'core.pagination.StandardPagination',
     'PAGE_SIZE': 50,
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
@@ -219,20 +222,70 @@ if _sentry_dsn:
     except ImportError:
         pass  # sentry-sdk not installed — silently skip
 
+# ── drf-spectacular (OpenAPI / Swagger UI) ───────────────────────────────────
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Hillyfielders Gorkha FC API',
+    'DESCRIPTION': (
+        'REST API for the Hillyfielders Gorkha FC football club website.\n\n'
+        '**Public endpoints** (`/api/`) require no authentication.\n\n'
+        '**Admin endpoints** (`/api/admin/`) require JWT cookie authentication '
+        'and role-based permissions. Login at `/api/auth/login/` first.'
+    ),
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'TAGS': [
+        {'name': 'auth', 'description': 'JWT cookie-based authentication'},
+        {'name': 'players', 'description': 'Teams, players, and staff (public)'},
+        {'name': 'fixtures', 'description': 'Match fixtures and results (public)'},
+        {'name': 'news', 'description': 'News articles (public)'},
+        {'name': 'gallery', 'description': 'Photo gallery (public)'},
+        {'name': 'sponsors', 'description': 'Sponsors (public)'},
+        {'name': 'club', 'description': 'Club profile (public)'},
+        {'name': 'contact', 'description': 'Contact form (public)'},
+        {'name': 'health', 'description': 'Health check'},
+        {'name': 'admin-players', 'description': 'Admin: Players & Staff CRUD'},
+        {'name': 'admin-fixtures', 'description': 'Admin: Fixtures & Competitions CRUD'},
+        {'name': 'admin-news', 'description': 'Admin: Articles & Categories CRUD'},
+        {'name': 'admin-gallery', 'description': 'Admin: Photos CRUD'},
+        {'name': 'admin-sponsors', 'description': 'Admin: Sponsors CRUD'},
+        {'name': 'admin-club', 'description': 'Admin: Club Profile management'},
+        {'name': 'admin-enquiries', 'description': 'Admin: Enquiries inbox'},
+        {'name': 'admin-users', 'description': 'Admin: User management (superadmin only)'},
+        {'name': 'admin-dashboard', 'description': 'Admin: Dashboard stats'},
+    ],
+}
+
 # ── Logging ───────────────────────────────────────────────────────────────────
+_LOG_DIR = BASE_DIR / 'logs'
+_LOG_DIR.mkdir(exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} {levelname} {name} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {'class': 'logging.StreamHandler'},
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': _LOG_DIR / 'django.log',
+            'maxBytes': 5 * 1024 * 1024,  # 5 MB per file
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
     },
     'root': {
-        'handlers': ['console'],
+        'handlers': ['console', 'file'],
         'level': 'WARNING',
     },
     'loggers': {
-        'core':     {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
-        'accounts': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
-        'news':     {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'core':     {'handlers': ['console', 'file'], 'level': 'INFO', 'propagate': False},
+        'accounts': {'handlers': ['console', 'file'], 'level': 'INFO', 'propagate': False},
+        'news':     {'handlers': ['console', 'file'], 'level': 'INFO', 'propagate': False},
     },
 }

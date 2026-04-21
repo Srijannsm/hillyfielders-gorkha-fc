@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npm install *)",
+      "Bash(npx vitest *)",
+      "Bash(npx playwright *)",
+      "Bash(python manage.py test)",
+      "Bash(python manage.py makemigrations players news accounts fixtures)"
     ]
   }
 }

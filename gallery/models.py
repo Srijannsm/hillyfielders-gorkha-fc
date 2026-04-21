@@ -1,9 +1,16 @@
 from io import BytesIO
 import os
 
+from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from PIL import Image
+
+_IMAGE_EXTENSIONS = FileExtensionValidator(
+    allowed_extensions=['jpg', 'jpeg', 'png', 'webp', 'gif']
+)
+_MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50 MB
 
 
 class Photo(models.Model):
@@ -15,7 +22,7 @@ class Photo(models.Model):
     ]
 
     title      = models.CharField(max_length=200)
-    image      = models.ImageField(upload_to='gallery/')
+    image      = models.ImageField(upload_to='gallery/', validators=[_IMAGE_EXTENSIONS])
     thumbnail  = models.ImageField(upload_to='gallery/thumbs/', blank=True, null=True)
     width      = models.PositiveIntegerField(default=0)
     height     = models.PositiveIntegerField(default=0)
@@ -27,9 +34,17 @@ class Photo(models.Model):
 
     class Meta:
         ordering = ['-date_taken', '-created_at']
+        indexes = [
+            models.Index(fields=['category', 'is_published']),
+        ]
 
     def __str__(self):
         return self.title
+
+    def clean(self):
+        super().clean()
+        if self.image and hasattr(self.image, 'size') and self.image.size > _MAX_UPLOAD_BYTES:
+            raise ValidationError('Image must be smaller than 50 MB.')
 
     # ── Save override ──────────────────────────────────────────────────────────
 

@@ -13,7 +13,7 @@ class Fixture(models.Model):
     home_team_name = models.CharField(max_length=100)
     away_team_name = models.CharField(max_length=100)
     our_team = models.ForeignKey(Team, on_delete=models.PROTECT)
-    competition = models.ForeignKey(Competition, on_delete=models.SET_NULL, null=True)
+    competition = models.ForeignKey(Competition, on_delete=models.PROTECT, null=True)
     date = models.DateTimeField()
     venue = models.CharField(max_length=200, blank=True)
     is_home_game = models.BooleanField(default=True)
@@ -26,6 +26,9 @@ class Fixture(models.Model):
 
     class Meta:
         ordering = ['date']
+        indexes = [
+            models.Index(fields=['is_completed', 'date']),
+        ]
 
     def __str__(self):
         return f"{self.home_team_name} vs {self.away_team_name} — {self.date.strftime('%d %b %Y')}"

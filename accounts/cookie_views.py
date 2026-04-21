@@ -7,9 +7,10 @@ Logout → clears both cookies
 """
 import logging
 from django.conf import settings
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
@@ -46,6 +47,25 @@ class CookieLoginView(APIView):
     permission_classes = [AllowAny]
     throttle_classes   = [LoginRateThrottle]
 
+    @extend_schema(
+        tags=['auth'],
+        summary='Login',
+        description='Authenticates with username/password. Sets httpOnly JWT cookies (`gfc_access`, `gfc_refresh`). Rate-limited to 10/hour.',
+        request=inline_serializer('LoginRequest', fields={
+            'username': serializers.CharField(),
+            'password': serializers.CharField(),
+            'remember_me': serializers.BooleanField(required=False),
+        }),
+        responses={
+            200: inline_serializer('LoginResponse', fields={
+                'username': serializers.CharField(),
+                'is_staff': serializers.BooleanField(),
+                'is_superuser': serializers.BooleanField(),
+                'role': serializers.CharField(allow_null=True),
+            }),
+            401: inline_serializer('LoginError', fields={'error': serializers.CharField()}),
+        },
+    )
     def post(self, request):
         serializer = CustomTokenObtainPairSerializer(
             data=request.data,
@@ -93,6 +113,16 @@ class CookieRefreshView(APIView):
     """
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        tags=['auth'],
+        summary='Refresh access token',
+        description='Reads the `gfc_refresh` httpOnly cookie and issues a new `gfc_access` cookie.',
+        request=None,
+        responses={
+            200: inline_serializer('RefreshResponse', fields={'detail': serializers.CharField()}),
+            401: inline_serializer('RefreshError', fields={'error': serializers.CharField()}),
+        },
+    )
     def post(self, request):
         refresh_token = request.COOKIES.get('gfc_refresh')
         if not refresh_token:
@@ -125,7 +155,21 @@ class LogoutView(APIView):
     """
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        tags=['auth'],
+        summary='Logout',
+        description='Clears the `gfc_access` and `gfc_refresh` httpOnly cookies.',
+        request=None,
+        responses={200: inline_serializer('LogoutResponse', fields={'detail': serializers.CharField()})},
+    )
     def post(self, request):
+        refresh_token = request.COOKIES.get('gfc_refresh')
+        if refresh_token:
+            try:
+                RefreshToken(refresh_token).blacklist()
+            except TokenError:
+                pass  # already expired or invalid — safe to ignore
+
         response = Response({'detail': 'Logged out.'})
         response.delete_cookie('gfc_access',  path='/')
         response.delete_cookie('gfc_refresh', path='/')

@@ -1,3 +1,5 @@
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
@@ -13,11 +15,37 @@ from django.utils import timezone
 class DashboardView(APIView):
     permission_classes = [IsAdminUser]
 
+    @extend_schema(
+        tags=['admin-dashboard'],
+        summary='Get dashboard stats',
+        description='Returns aggregate counts and recent records for the admin dashboard.',
+        responses={200: inline_serializer('DashboardStats', fields={
+            'players': serializers.IntegerField(),
+            'active_players': serializers.IntegerField(),
+            'staff': serializers.IntegerField(),
+            'teams': serializers.IntegerField(),
+            'fixtures_total': serializers.IntegerField(),
+            'fixtures_upcoming': serializers.IntegerField(),
+            'fixtures_completed': serializers.IntegerField(),
+            'articles_total': serializers.IntegerField(),
+            'articles_published': serializers.IntegerField(),
+            'photos': serializers.IntegerField(),
+            'sponsors': serializers.IntegerField(),
+            'enquiries_total': serializers.IntegerField(),
+            'enquiries_unread': serializers.IntegerField(),
+        })},
+    )
     def get(self, request):
         now = timezone.now()
 
-        # Recent fixtures (last 5 completed)
-        recent_fixtures = Fixture.objects.filter(is_completed=True).order_by('-date')[:5]
+        # Recent fixtures (last 5 completed) — only() avoids loading unused columns
+        recent_fixtures = (
+            Fixture.objects
+            .filter(is_completed=True)
+            .only('id', 'home_team_name', 'away_team_name', 'home_score', 'away_score',
+                  'date', 'venue', 'is_home_game', 'is_completed')
+            .order_by('-date')[:5]
+        )
         recent_fixture_data = [
             {
                 'id': f.id,
@@ -32,9 +60,12 @@ class DashboardView(APIView):
         ]
 
         # Upcoming fixtures (next 5)
-        upcoming_fixtures = Fixture.objects.filter(
-            is_completed=False, date__gte=now
-        ).order_by('date')[:5]
+        upcoming_fixtures = (
+            Fixture.objects
+            .filter(is_completed=False, date__gte=now)
+            .only('id', 'home_team_name', 'away_team_name', 'date', 'venue')
+            .order_by('date')[:5]
+        )
         upcoming_fixture_data = [
             {
                 'id': f.id,
@@ -46,8 +77,12 @@ class DashboardView(APIView):
             for f in upcoming_fixtures
         ]
 
-        # Recent articles (last 5)
-        recent_articles = Article.objects.order_by('-created_at')[:5]
+        # Recent articles (last 5) — skip content (large TextField)
+        recent_articles = (
+            Article.objects
+            .only('id', 'title', 'slug', 'is_published', 'created_at')
+            .order_by('-created_at')[:5]
+        )
         recent_article_data = [
             {
                 'id': a.id,
@@ -60,7 +95,11 @@ class DashboardView(APIView):
         ]
 
         # Recent enquiries (last 5)
-        recent_enquiries = Enquiry.objects.order_by('-created_at')[:5]
+        recent_enquiries = (
+            Enquiry.objects
+            .only('id', 'name', 'email', 'is_read', 'created_at')
+            .order_by('-created_at')[:5]
+        )
         recent_enquiry_data = [
             {
                 'id': e.id,
